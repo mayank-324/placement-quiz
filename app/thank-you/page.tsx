@@ -12,8 +12,8 @@ export default function ThankYouPage() {
 
             {/* Header */}
             <header className="w-full max-w-7xl flex items-center justify-center py-4 z-10">
-                <div className="h-10 w-10 bg-gradient-to-br from-primary to-purple-600 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center text-white font-bold text-xl mr-3">
-                    P
+                <div className="h-10 w-10 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center text-white font-bold text-xl mr-3">
+                    <img src="/icon.png" alt="icon" />
                 </div>
                 <span className="font-bold text-2xl tracking-tight text-foreground/90">Percept Software Systems</span>
             </header>
