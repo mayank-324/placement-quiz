@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { Question } from "@/lib/types"
 
 export default function QuizComponent() {
@@ -152,75 +153,87 @@ export default function QuizComponent() {
     const selectedOption = answers[currentQuestion.id]
 
     return (
-        <Card className="w-full max-w-2xl mx-auto border-zinc-800 bg-zinc-900/50 backdrop-blur-xl transition-all duration-300">
-            <CardHeader>
-                <div className="flex justify-between items-center mb-4">
-                    <span className="text-sm font-medium text-purple-400">
-                        Question {currentQuestionIndex + 1} of {questions.length}
-                    </span>
-                    <span className="text-xs text-zinc-500">
-                        Percept Software Systems
-                    </span>
+        <Card className="w-full border-border bg-card/60 backdrop-blur-xl shadow-2xl overflow-hidden">
+            <CardHeader className="bg-secondary/30 pb-6">
+                <div className="flex justify-between items-start md:items-center mb-4 gap-4">
+                    <div>
+                        <span className="text-sm font-medium text-primary uppercase tracking-wider">
+                            Question {currentQuestionIndex + 1}
+                        </span>
+                        <span className="text-sm text-muted-foreground ml-2">/ {questions.length}</span>
+                    </div>
                 </div>
-                <CardTitle className="text-xl md:text-2xl leading-relaxed">
+                <CardTitle className="text-xl md:text-2xl font-semibold leading-relaxed">
                     {currentQuestion.question_text}
                 </CardTitle>
-                <div className="w-full bg-zinc-800 h-1 mt-4 rounded-full overflow-hidden">
+                <div className="w-full bg-secondary h-1.5 mt-6 rounded-full overflow-hidden">
                     <div
-                        className="bg-purple-600 h-full transition-all duration-500 ease-out"
+                        className="bg-primary h-full transition-all duration-500 ease-out rounded-full shadow-[0_0_10px_theme(colors.primary.DEFAULT)]"
                         style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
                     />
                 </div>
             </CardHeader>
-            <CardContent className="space-y-3 pt-4">
+
+            <CardContent className="space-y-3 pt-6">
                 {currentQuestion.options.map((option, index) => (
                     <div
                         key={index}
                         onClick={() => handleOptionSelect(index)}
-                        className={`
-              relative p-4 rounded-lg border cursor-pointer transition-all duration-200 group
-              ${selectedOption === index
-                                ? 'border-purple-500 bg-purple-500/10 text-white shadow-[0_0_15px_rgba(168,85,247,0.15)]'
-                                : 'border-zinc-800 bg-zinc-950/30 hover:bg-zinc-800 hover:border-zinc-700 text-zinc-300'}
-            `}
+                        className={cn(
+                            "relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 group flex items-center",
+                            selectedOption === index
+                                ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
+                                : "border-muted bg-card hover:bg-muted/50 hover:border-muted-foreground/50"
+                        )}
                     >
-                        <div className="flex items-center">
-                            <div className={`
-                flex items-center justify-center w-6 h-6 rounded-full border mr-3 text-xs font-bold transition-colors
-                ${selectedOption === index
-                                    ? 'border-purple-500 bg-purple-500 text-white'
-                                    : 'border-zinc-700 text-zinc-500 group-hover:border-zinc-600'}
-              `}>
-                                {String.fromCharCode(65 + index)}
-                            </div>
-                            <span className="flex-1">{option}</span>
-                            {selectedOption === index && (
-                                <CheckCircle2 className="h-5 w-5 text-purple-500 animate-in fade-in zoom-in duration-200" />
+                        <div
+                            className={cn(
+                                "flex items-center justify-center w-8 h-8 rounded-lg border-2 mr-4 text-sm font-bold transition-all",
+                                selectedOption === index
+                                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                                    : "border-muted-foreground/30 text-muted-foreground group-hover:border-primary/50 group-hover:text-primary"
                             )}
+                        >
+                            {String.fromCharCode(65 + index)}
+                        </div>
+                        <span className={cn(
+                            "flex-1 font-medium transition-colors",
+                            selectedOption === index ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                        )}>
+                            {option}
+                        </span>
+
+                        <div className={cn(
+                            "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all opacity-0 scale-50",
+                            selectedOption === index && "opacity-100 scale-100 border-primary text-primary"
+                        )}>
+                            {selectedOption === index && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
                         </div>
                     </div>
                 ))}
             </CardContent>
-            <CardFooter className="flex justify-between pt-4 border-t border-zinc-800/50">
+
+            <CardFooter className="flex justify-between pt-6 border-t border-border/50 bg-secondary/10">
                 <Button
                     variant="ghost"
+                    size="lg"
                     onClick={handlePrevious}
                     disabled={currentQuestionIndex === 0 || submitting}
-                    className="text-zinc-400 hover:text-white"
+                    className="text-muted-foreground hover:text-foreground pl-0 hover:bg-transparent hover:underline"
                 >
-                    Previous
+                    Back to Previous
                 </Button>
                 <Button
                     onClick={handleNext}
                     disabled={selectedOption === undefined || submitting}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-8"
+                    className="px-8 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all hover:scale-[1.02]"
                 >
                     {submitting ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                     ) : isLastQuestion ? (
-                        "Submit"
+                        "Submit Assessment"
                     ) : (
-                        "Next"
+                        "Next Question"
                     )}
                 </Button>
             </CardFooter>

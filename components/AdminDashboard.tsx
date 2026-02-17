@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Fragment } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
@@ -94,10 +94,10 @@ export default function AdminDashboard() {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">
                         Admin Dashboard
                     </h1>
-                    <p className="text-zinc-400">Overview of student performance</p>
+                    <p className="text-muted-foreground mt-1">Overview of student performance and results</p>
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
                     <Button variant="outline" size="icon" onClick={fetchData} title="Refresh">
@@ -141,7 +141,7 @@ export default function AdminDashboard() {
                                     </tr>
                                 ) : (
                                     filteredAttempts.map((attempt) => (
-                                        <>
+                                        <Fragment key={attempt.id}>
                                             <tr key={attempt.id} className="bg-zinc-900/30 hover:bg-zinc-800/50 transition-colors">
                                                 <td className="px-6 py-4 font-medium text-white">
                                                     {attempt.user_email || 'Unknown User'}
@@ -207,7 +207,7 @@ export default function AdminDashboard() {
                                                     </td>
                                                 </tr>
                                             )}
-                                        </>
+                                        </Fragment>
                                     ))
                                 )}
                             </tbody>

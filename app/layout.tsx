@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Campus Placement Drive",
-  description: "Assessment platform for campus placement.",
+  title: "Percept Software Systems | Placement Drive",
+  description: "Assessment platform for Percept Software Systems campus placement.",
 };
 
 export default function RootLayout({
@@ -15,8 +15,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
+    <html lang="en" className="dark">
+      <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased`}>
+        {children}
+      </body>
     </html>
   );
 }

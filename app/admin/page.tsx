@@ -2,15 +2,21 @@ import AdminDashboard from "@/components/AdminDashboard";
 
 export default function AdminPage() {
     return (
-        <main className="min-h-screen p-8 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-zinc-900 via-zinc-950 to-zinc-950">
-            <header className="max-w-7xl mx-auto mb-8 flex items-center gap-3">
-                <div className="h-8 w-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center font-bold text-white">
+        <main className="min-h-screen flex flex-col p-4 md:p-8 bg-background relative overflow-hidden">
+            {/* Background */}
+            <div className="fixed inset-0 -z-10 h-full w-full bg-background [background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)] opacity-20"></div>
+
+            <header className="w-full max-w-7xl mx-auto flex items-center gap-3 mb-8">
+                <div className="h-9 w-9 bg-gradient-to-br from-primary to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md">
                     P
                 </div>
-                <span className="font-bold text-xl tracking-tight text-white">Percept Software Systems</span>
+                <span className="font-bold text-xl tracking-tight">Percept Software Systems</span>
+                <div className="ml-auto px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium border border-primary/20">
+                    Admin Portal
+                </div>
             </header>
 
-            <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
+            <div className="w-full max-w-7xl mx-auto flex-1 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
                 <AdminDashboard />
             </div>
         </main>

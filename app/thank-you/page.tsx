@@ -6,45 +6,44 @@ import { CheckCircle2 } from "lucide-react";
 
 export default function ThankYouPage() {
     return (
-        <main className="flex min-h-screen flex-col items-center justify-center p-4 relative overflow-hidden bg-zinc-950">
-            <div className="absolute inset-0 w-full h-full bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none"></div>
+        <main className="min-h-screen flex flex-col items-center justify-between p-4 md:p-8 bg-background relative overflow-hidden">
+            {/* Background */}
+            <div className="fixed inset-0 -z-10 h-full w-full bg-background [background:radial-gradient(125%_125%_at_50%_10%,#000_40%,#63e_100%)] opacity-20"></div>
 
             {/* Header */}
-            <div className="absolute top-0 left-0 w-full p-6 flex justify-center z-10">
-                <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center font-bold text-white">
-                        P
-                    </div>
-                    <span className="font-bold text-xl tracking-tight text-white">Percept Software Systems</span>
+            <header className="w-full max-w-7xl flex items-center justify-center py-4 z-10">
+                <div className="h-10 w-10 bg-gradient-to-br from-primary to-purple-600 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center text-white font-bold text-xl mr-3">
+                    P
                 </div>
-            </div>
+                <span className="font-bold text-2xl tracking-tight text-foreground/90">Percept Software Systems</span>
+            </header>
 
-            <div className="z-10 animate-in fade-in zoom-in duration-500">
-                <Card className="w-full max-w-md text-center border-zinc-800 bg-zinc-900/50 backdrop-blur-xl">
-                    <CardHeader className="flex flex-col items-center space-y-4">
-                        <div className="rounded-full bg-green-500/10 p-6 ring-1 ring-green-500/50">
+            <div className="flex-1 w-full flex items-center justify-center z-10 animate-in fade-in zoom-in duration-500 pb-20">
+                <Card className="w-full max-w-md text-center border-border bg-card/60 backdrop-blur-xl shadow-2xl">
+                    <CardHeader className="flex flex-col items-center space-y-4 pb-2">
+                        <div className="rounded-full bg-green-500/10 p-6 ring-1 ring-green-500/50 mb-2">
                             <CheckCircle2 className="h-12 w-12 text-green-500" />
                         </div>
                         <CardTitle className="text-3xl font-bold bg-gradient-to-r from-green-400 to-emerald-600 bg-clip-text text-transparent">
                             Quiz Completed!
                         </CardTitle>
-                        <CardDescription className="text-zinc-400 text-lg">
-                            Thank you for participating in the Placement Drive.
+                        <CardDescription className="text-lg">
+                            Thank you for participating.
                         </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                        <p className="text-zinc-500">
-                            Your responses have been recorded successfully. We will review your performance and get back to you shortly.
+                    <CardContent className="space-y-8">
+                        <p className="text-muted-foreground leading-relaxed">
+                            Your responses have been recorded successfully. Percept Software Systems team will review your performance and get back to you shortly.
                         </p>
-                        <Button asChild className="bg-zinc-800 hover:bg-zinc-700 text-white w-full">
-                            <Link href="/">Back to Home</Link>
+                        <Button asChild className="w-full h-11 text-base shadow-lg shadow-primary/20" variant="default">
+                            <Link href="/">Return to Home</Link>
                         </Button>
                     </CardContent>
                 </Card>
             </div>
 
-            <footer className="absolute bottom-4 text-zinc-500 text-xs text-center z-10">
-                <p>© 2026 Percept Software Systems. All rights reserved.</p>
+            <footer className="w-full text-center py-6 text-muted-foreground text-sm z-10">
+                © 2026 Percept Software Systems. All rights reserved.
             </footer>
         </main>
     );
