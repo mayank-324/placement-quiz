@@ -17,6 +17,63 @@ export default function QuizComponent() {
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
+    const [timeLeft, setTimeLeft] = useState(1800);
+
+    // Load state from localStorage on mount
+    useEffect(() => {
+        const storedIndex = localStorage.getItem('quiz_current_index')
+        const storedAnswers = localStorage.getItem('quiz_answers')
+        const storedStartTime = localStorage.getItem('quiz_start_time')
+
+        if (storedIndex) setCurrentQuestionIndex(parseInt(storedIndex))
+        if (storedAnswers) setAnswers(JSON.parse(storedAnswers))
+
+        if (storedStartTime) {
+            const elapsed = Math.floor((Date.now() - parseInt(storedStartTime)) / 1000)
+            const remaining = 1800 - elapsed
+            if (remaining > 0) {
+                setTimeLeft(remaining)
+            } else {
+                setTimeLeft(0)
+                // If time expired while away, we should submit or show error
+                // For now, let the timer effect handle the submission trigger
+            }
+        } else {
+            // First time loading quiz
+            localStorage.setItem('quiz_start_time', Date.now().toString())
+        }
+    }, [])
+
+    // Save state updates
+    useEffect(() => {
+        localStorage.setItem('quiz_current_index', currentQuestionIndex.toString())
+    }, [currentQuestionIndex])
+
+    useEffect(() => {
+        localStorage.setItem('quiz_answers', JSON.stringify(answers))
+    }, [answers])
+
+    useEffect(() => {
+        if (timeLeft <= 0) {
+            // Only submit if questions are loaded and we are not already submitting
+            if (questions.length > 0 && !submitting) {
+                submitQuiz()
+            }
+            return
+        }
+
+        const timer = setInterval(() => {
+            setTimeLeft(prev => {
+                const newTime = prev - 1
+                if (newTime <= 0) {
+                    clearInterval(timer)
+                    return 0
+                }
+                return newTime
+            });
+        }, 1000);
+        return () => clearInterval(timer)
+    }, [timeLeft, questions.length, submitting])
 
     useEffect(() => {
         const fetchQuestions = async () => {
@@ -66,11 +123,17 @@ export default function QuizComponent() {
         fetchQuestions()
     }, [router])
 
+    const convertToMMSS = (seconds: number) => {
+        const mm = Math.floor(seconds / 60);
+        const ss = seconds % 60;
+        return `${mm.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
+    }
+
     const handleOptionSelect = (optionIndex: number) => {
-        setAnswers({
-            ...answers,
+        setAnswers(prev => ({
+            ...prev,
             [questions[currentQuestionIndex].id]: optionIndex
-        })
+        }))
     }
 
     const handleNext = () => {
@@ -88,6 +151,7 @@ export default function QuizComponent() {
     }
 
     const submitQuiz = async () => {
+        if (submitting) return
         setSubmitting(true)
         const userId = localStorage.getItem('userId')
         if (!userId) return
@@ -110,6 +174,11 @@ export default function QuizComponent() {
                 }])
 
             if (error) throw error
+
+            // Clear quiz state on successful submission
+            localStorage.removeItem('quiz_current_index')
+            localStorage.removeItem('quiz_answers')
+            localStorage.removeItem('quiz_start_time')
 
             router.push('/thank-you')
         } catch (err) {
@@ -162,6 +231,7 @@ export default function QuizComponent() {
                         </span>
                         <span className="text-sm text-muted-foreground ml-2">/ {questions.length}</span>
                     </div>
+                    <span>Time: {convertToMMSS(timeLeft)}</span>
                 </div>
                 <CardTitle className="text-xl md:text-2xl font-semibold leading-relaxed">
                     {currentQuestion.question_text}
