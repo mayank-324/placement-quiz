@@ -18,4 +18,5 @@ export interface Attempt {
     answers: Record<string, number>;
     created_at: string;
     user?: { email: string }; // joined
+    violations: number;
 }

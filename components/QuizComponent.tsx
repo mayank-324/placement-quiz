@@ -18,15 +18,35 @@ export default function QuizComponent() {
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
     const [timeLeft, setTimeLeft] = useState(1800);
+    const [violations, setViolations] = useState(0);
+
+    //detect change in tab, blur, etc
+    useEffect(() => {
+        const triggerWarning = () => {
+            setViolations(prev => prev + 1);
+            alert("You are not allowed to change tab's or switch between app's during assesment!");
+        }
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') triggerWarning();
+        }
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+        // window.addEventListener('blur', triggerWarning)
+        return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange)
+            // window.removeEventListener('blur', triggerWarning)
+        }
+    }, []);
 
     // Load state from localStorage on mount
     useEffect(() => {
         const storedIndex = localStorage.getItem('quiz_current_index')
         const storedAnswers = localStorage.getItem('quiz_answers')
         const storedStartTime = localStorage.getItem('quiz_start_time')
+        const storedViolations = localStorage.getItem('quiz_violations')
 
         if (storedIndex) setCurrentQuestionIndex(parseInt(storedIndex))
         if (storedAnswers) setAnswers(JSON.parse(storedAnswers))
+        if (storedViolations) setViolations(parseInt(storedViolations))
 
         if (storedStartTime) {
             const elapsed = Math.floor((Date.now() - parseInt(storedStartTime)) / 1000)
@@ -52,6 +72,10 @@ export default function QuizComponent() {
     useEffect(() => {
         localStorage.setItem('quiz_answers', JSON.stringify(answers))
     }, [answers])
+
+    useEffect(() => {
+        localStorage.setItem('quiz_violations', violations.toString())
+    }, [violations])
 
     useEffect(() => {
         if (timeLeft <= 0) {
@@ -170,7 +194,8 @@ export default function QuizComponent() {
                 .insert([{
                     user_id: userId,
                     score: score,
-                    answers: answers
+                    answers: answers,
+                    violations: violations
                 }])
 
             if (error) throw error
@@ -179,6 +204,7 @@ export default function QuizComponent() {
             localStorage.removeItem('quiz_current_index')
             localStorage.removeItem('quiz_answers')
             localStorage.removeItem('quiz_start_time')
+            localStorage.removeItem('quiz_violations')
 
             router.push('/thank-you')
         } catch (err) {

@@ -129,6 +129,7 @@ export default function AdminDashboard() {
                                     <th className="px-6 py-3">Student</th>
                                     <th className="px-6 py-3">Score</th>
                                     <th className="px-6 py-3">Date</th>
+                                    <th className="px-6 py-3">Violations</th>
                                     <th className="px-6 py-3 text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -159,6 +160,9 @@ export default function AdminDashboard() {
                                                 <td className="px-6 py-4 text-zinc-400">
                                                     {new Date(attempt.created_at).toLocaleDateString()}
                                                 </td>
+                                                <td className="px-6 py-4 text-zinc-400">
+                                                    {attempt.violations}
+                                                </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <Button
                                                         variant="ghost"
@@ -176,7 +180,7 @@ export default function AdminDashboard() {
                                             </tr>
                                             {expandedAttemptId === attempt.id && (
                                                 <tr className="bg-zinc-950/50">
-                                                    <td colSpan={4} className="px-6 py-4">
+                                                    <td colSpan={5} className="px-6 py-4">
                                                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                                                             {questions.map((q) => {
                                                                 const userAnswerIndex = attempt.answers[q.id];
@@ -185,9 +189,9 @@ export default function AdminDashboard() {
                                                                     <div
                                                                         key={q.id}
                                                                         className={`
-                                      p-3 rounded-lg border text-xs
-                                      ${isCorrect ? 'border-green-900/50 bg-green-900/10' : 'border-red-900/50 bg-red-900/10'}
-                                    `}
+                                                                                p-3 rounded-lg border text-xs
+                                                                                ${isCorrect ? 'border-green-900/50 bg-green-900/10' : 'border-red-900/50 bg-red-900/10'}
+                                                                                `}
                                                                     >
                                                                         <p className="font-medium text-zinc-300 mb-1">{q.question_text}</p>
                                                                         <div className="flex flex-col gap-1">
