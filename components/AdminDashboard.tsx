@@ -100,6 +100,9 @@ export default function AdminDashboard() {
                     <p className="text-muted-foreground mt-1">Overview of student performance and results</p>
                 </div>
                 <div className="flex gap-2 w-full md:w-auto">
+                    <Button variant="outline" onClick={() => router.push('/admin/questions')}>
+                        Manage Questions
+                    </Button>
                     <Button variant="outline" size="icon" onClick={fetchData} title="Refresh">
                         <RefreshCw className="h-4 w-4" />
                     </Button>
