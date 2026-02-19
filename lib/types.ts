@@ -54,8 +54,8 @@ export interface TechnicalInfo {
     internshipDetails?: string;
     liveProjects: "Yes" | "No";
     githubLink?: string;
-    githubUrl: string;
-    linkedinUrl: string;
+    githubUrl?: string;
+    linkedinUrl?: string;
     portfolio?: string;
     resumeUrl?: string;
     certificatesUrl?: string;
@@ -63,8 +63,6 @@ export interface TechnicalInfo {
 
 export interface AvailabilityInfo {
     fullTimeOnsite: "Yes" | "No";
-    noticePeriod: string;
-    expectedSalary?: string;
     relocate: "Yes" | "No";
 }
 

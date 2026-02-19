@@ -51,8 +51,6 @@ const initialTechnical: TechnicalInfo = {
 
 const initialAvailability: AvailabilityInfo = {
     fullTimeOnsite: "No",
-    noticePeriod: "",
-    expectedSalary: "",
     relocate: "No",
 }
 
@@ -81,17 +79,15 @@ export default function RegisterForm() {
     const router = useRouter()
 
     const validateFiles = () => {
-        if (!resumeFile) {
-            setError("Resume is required.")
-            return false
-        }
-        if (resumeFile.size > 2 * 1024 * 1024) {
-            setError("Resume size must be less than 2MB.")
-            return false
-        }
-        if (resumeFile.type !== "application/pdf") {
-            setError("Resume must be a PDF file.")
-            return false
+        if (resumeFile) {
+            if (resumeFile.size > 2 * 1024 * 1024) {
+                setError("Resume size must be less than 2MB.")
+                return false
+            }
+            if (resumeFile.type !== "application/pdf") {
+                setError("Resume must be a PDF file.")
+                return false
+            }
         }
         if (certificateFile && certificateFile.size > 2 * 1024 * 1024) {
             setError("Certificate size must be less than 2MB.")
@@ -126,17 +122,13 @@ export default function RegisterForm() {
             }
         }
         if (step === 3) {
-            if (!technical.primaryLanguage || !technical.githubUrl || !technical.linkedinUrl) {
+            if (!technical.primaryLanguage) {
                 setError("Please fill all mandatory fields.")
                 return
             }
         }
         if (step === 4) {
             if (!validateFiles()) return
-            if (!availability.noticePeriod) {
-                setError("Notice period is required.")
-                return
-            }
         }
 
         setError(null)
@@ -181,6 +173,19 @@ export default function RegisterForm() {
         setError(null)
 
         try {
+            // Check if email already exists
+            const { data: existingUser } = await supabase
+                .from('users')
+                .select('email')
+                .eq('email', basic.personalEmail)
+                .single()
+
+            if (existingUser) {
+                setError("This email is already registered. Please login instead.")
+                setLoading(false)
+                return
+            }
+
             // 1. Create User
             const { data: newUser, error: createError } = await supabase
                 .from('users')
@@ -242,8 +247,6 @@ export default function RegisterForm() {
                         resume_url: resumeUrl,
                         certificates_url: certUrl,
                         full_time_onsite: availability.fullTimeOnsite,
-                        notice_period: availability.noticePeriod,
-                        expected_salary: availability.expectedSalary,
                         relocate: availability.relocate,
                         confirm_test_identity: declaration.confirmTestIdentity,
                         no_unfair_means: declaration.noUnfairMeans,
@@ -604,22 +607,6 @@ export default function RegisterForm() {
                                             <SelectItem value="No">No</SelectItem>
                                         </SelectContent>
                                     </Select>
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Notice Period</Label>
-                                    <Input
-                                        placeholder="e.g. Immediate, 1 month"
-                                        value={availability.noticePeriod}
-                                        onChange={(e) => setAvailability({ ...availability, noticePeriod: e.target.value })}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label>Expected Salary (Optional)</Label>
-                                    <Input
-                                        placeholder="e.g. 8 LPA"
-                                        value={availability.expectedSalary}
-                                        onChange={(e) => setAvailability({ ...availability, expectedSalary: e.target.value })}
-                                    />
                                 </div>
                                 <div className="space-y-2">
                                     <Label>Open to Relocate?</Label>
