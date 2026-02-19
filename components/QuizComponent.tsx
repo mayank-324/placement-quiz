@@ -122,8 +122,7 @@ export default function QuizComponent() {
             const { data, error } = await supabase
                 .from('questions')
                 .select('*')
-                .order('id')
-                .limit(15) // Ensure we get 15 questions
+                .order('id') // Ensure we get 15 questions
 
             if (error) {
                 console.error(error)
