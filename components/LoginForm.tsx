@@ -53,20 +53,7 @@ export default function LoginForm() {
                     setError("Invalid password given for this email.")
                 }
             } else {
-                // Create new user
-                const { data: newUser, error: createError } = await supabase
-                    .from('users')
-                    .insert([{ email, password, role: 'student' }])
-                    .select()
-                    .single()
-
-                if (createError) throw createError
-
-                if (newUser) {
-                    localStorage.setItem('userId', newUser.id)
-                    localStorage.setItem('userRole', 'student')
-                    router.push('/quiz')
-                }
+                router.push('/register');
             }
         } catch (err) {
             console.error(err)
@@ -128,20 +115,32 @@ export default function LoginForm() {
                     </div>
                 </CardContent>
                 <CardFooter className="pt-2">
-                    <Button
-                        type="submit"
-                        className="w-full h-11 text-base font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all hover:scale-[1.01]"
-                        disabled={loading}
-                    >
-                        {loading ? (
-                            <>
-                                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                Authenticating...
-                            </>
-                        ) : (
-                            "Start Assessment"
-                        )}
-                    </Button>
+                    <div className="w-full space-y-4">
+                        <Button
+                            type="submit"
+                            className="w-full h-11 text-base font-semibold shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all hover:scale-[1.01]"
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                    Authenticating...
+                                </>
+                            ) : (
+                                "Start Assessment"
+                            )}
+                        </Button>
+                        <div className="text-center text-sm">
+                            <span className="text-muted-foreground mr-1">Don't have an account?</span>
+                            <button
+                                type="button"
+                                onClick={() => router.push('/register')}
+                                className="text-primary hover:underline font-medium"
+                            >
+                                Register Now
+                            </button>
+                        </div>
+                    </div>
                 </CardFooter>
             </form>
         </Card>
