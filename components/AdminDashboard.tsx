@@ -200,7 +200,15 @@ export default function AdminDashboard() {
                                                 <td className="px-6 py-4 text-zinc-400">
                                                     {attempt.violations}
                                                 </td>
-                                                <td className="px-6 py-4 text-right">
+                                                <td className="px-6 py-4 text-right flex justify-end gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => router.push(`/admin/profile/${attempt.user_id}`)}
+                                                        className="text-blue-400 hover:text-blue-300"
+                                                    >
+                                                        View Profile
+                                                    </Button>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"

@@ -50,10 +50,10 @@ export default function LoginForm() {
                         }
                     }
                 } else {
-                    setError("Invalid password given for this email.")
+                    setError("Invalid credetials! If you're new, Please Register First.")
                 }
             } else {
-                router.push('/register');
+                setError("Invalid credetials! If you're new, Please Register First.")
             }
         } catch (err) {
             console.error(err)
