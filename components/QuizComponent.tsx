@@ -8,6 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Question } from "@/lib/types"
+import { MarkdownRenderer } from "./MarkdownRenderer"
 
 export default function QuizComponent() {
     const [questions, setQuestions] = useState<Question[]>([])
@@ -258,9 +259,9 @@ export default function QuizComponent() {
                     </div>
                     <span>Time: {convertToMMSS(timeLeft)}</span>
                 </div>
-                <CardTitle className="text-xl md:text-2xl font-semibold leading-relaxed">
-                    {currentQuestion.question_text}
-                </CardTitle>
+                <div className="text-xl md:text-2xl font-semibold leading-relaxed">
+                    <MarkdownRenderer content={currentQuestion.question_text} />
+                </div>
                 <div className="w-full bg-secondary h-1.5 mt-6 rounded-full overflow-hidden">
                     <div
                         className="bg-primary h-full transition-all duration-500 ease-out rounded-full shadow-[0_0_10px_theme(colors.primary.DEFAULT)]"
@@ -291,12 +292,12 @@ export default function QuizComponent() {
                         >
                             {String.fromCharCode(65 + index)}
                         </div>
-                        <span className={cn(
+                        <div className={cn(
                             "flex-1 font-medium transition-colors",
                             selectedOption === index ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
                         )}>
-                            {option}
-                        </span>
+                            <MarkdownRenderer content={option} className="prose-p:my-0" />
+                        </div>
 
                         <div className={cn(
                             "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all opacity-0 scale-50",

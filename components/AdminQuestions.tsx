@@ -26,6 +26,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, Plus, Trash2, ArrowLeft } from "lucide-react"
 import { Question } from "@/lib/types"
+import { MarkdownRenderer } from "./MarkdownRenderer"
+import { cn } from "@/lib/utils"
 
 export default function AdminQuestions() {
     const [questions, setQuestions] = useState<Question[]>([])
@@ -218,12 +220,18 @@ export default function AdminQuestions() {
                         {questions.map((question) => (
                             <TableRow key={question.id}>
                                 <TableCell>{question.id}</TableCell>
-                                <TableCell className="font-medium">{question.question_text}</TableCell>
+                                <TableCell className="font-medium">
+                                    <MarkdownRenderer content={question.question_text} className="prose-p:my-0 text-sm" />
+                                </TableCell>
                                 <TableCell>
                                     <div className="text-xs text-muted-foreground space-y-1">
                                         {question.options.map((opt, i) => (
-                                            <div key={i} className={i === question.correct_option ? "text-green-500 font-bold" : ""}>
-                                                {String.fromCharCode(65 + i)}. {opt}
+                                            <div key={i} className={cn(
+                                                "flex items-start gap-2",
+                                                i === question.correct_option ? "text-green-500 font-bold" : ""
+                                            )}>
+                                                <span>{String.fromCharCode(65 + i)}.</span>
+                                                <MarkdownRenderer content={opt} className="prose-p:my-0 prose-code:text-[10px]" />
                                             </div>
                                         ))}
                                     </div>

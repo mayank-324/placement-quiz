@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input"
 import { Loader2, Search, Download, RefreshCw, ChevronDown, ChevronUp } from "lucide-react"
 import { Attempt, User, Question } from "@/lib/types"
+import { MarkdownRenderer } from "./MarkdownRenderer"
 
 interface AttemptWithDetails extends Attempt {
     user_email?: string;
@@ -238,15 +239,21 @@ export default function AdminDashboard() {
                                                                                 ${isCorrect ? 'border-green-900/50 bg-green-900/10' : 'border-red-900/50 bg-red-900/10'}
                                                                                 `}
                                                                     >
-                                                                        <p className="font-medium text-zinc-300 mb-1">{q.question_text}</p>
+                                                                        <div className="font-medium text-zinc-300 mb-1">
+                                                                            <MarkdownRenderer content={q.question_text} className="prose-p:mt-0 text-[11px]" />
+                                                                        </div>
                                                                         <div className="flex flex-col gap-1">
-                                                                            <p className={isCorrect ? "text-green-500" : "text-red-500"}>
-                                                                                User: {userAnswerIndex !== undefined ? q.options[userAnswerIndex] : 'Skipped'}
-                                                                            </p>
+                                                                            <div className={isCorrect ? "text-green-500" : "text-red-500"}>
+                                                                                <span className="font-bold mr-1">User:</span>
+                                                                                {userAnswerIndex !== undefined ? (
+                                                                                    <MarkdownRenderer content={q.options[userAnswerIndex]} className="prose-p:my-0 text-[11px] inline-block" />
+                                                                                ) : 'Skipped'}
+                                                                            </div>
                                                                             {!isCorrect && (
-                                                                                <p className="text-green-500/70">
-                                                                                    Correct: {q.options[q.correct_option]}
-                                                                                </p>
+                                                                                <div className="text-green-500/70">
+                                                                                    <span className="font-bold mr-1">Correct:</span>
+                                                                                    <MarkdownRenderer content={q.options[q.correct_option]} className="prose-p:my-0 text-[11px] inline-block" />
+                                                                                </div>
                                                                             )}
                                                                         </div>
                                                                     </div>
