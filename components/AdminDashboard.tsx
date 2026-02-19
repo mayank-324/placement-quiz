@@ -82,6 +82,35 @@ export default function AdminDashboard() {
         attempt.user_email?.toLowerCase().includes(searchTerm.toLowerCase())
     )
 
+    const handleExportCSV = () => {
+        if (attempts.length === 0) return
+
+        const headers = ["Student Email", "Score", "Total Questions", "Date", "Violations"]
+        const csvRows = [headers.join(",")]
+
+        attempts.forEach(attempt => {
+            const row = [
+                attempt.user_email || "Unknown",
+                attempt.score,
+                questions.length,
+                new Date(attempt.created_at).toLocaleDateString(),
+                attempt.violations
+            ]
+            csvRows.push(row.join(","))
+        })
+
+        const csvContent = csvRows.join("\n")
+        const blob = new Blob([csvContent], { type: "text/csv" })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `quiz-results-${new Date().toISOString().split('T')[0]}.csv`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        window.URL.revokeObjectURL(url)
+    }
+
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-[50vh]">
@@ -106,7 +135,12 @@ export default function AdminDashboard() {
                     <Button variant="outline" size="icon" onClick={fetchData} title="Refresh">
                         <RefreshCw className="h-4 w-4" />
                     </Button>
-                    <Button variant="default" className="bg-purple-600 hover:bg-purple-700">
+                    <Button
+                        variant="default"
+                        className="bg-purple-600 hover:bg-purple-700"
+                        onClick={handleExportCSV}
+                        disabled={attempts.length === 0}
+                    >
                         <Download className="mr-2 h-4 w-4" /> Export CSV
                     </Button>
                 </div>
