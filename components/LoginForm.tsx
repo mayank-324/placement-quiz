@@ -26,7 +26,7 @@ export default function LoginForm() {
                 .from('users')
                 .select('*')
                 .eq('email', email)
-                .single()
+                .maybeSingle()
 
             if (existingUser) {
                 // User exists, verify password (simple comparison as per requirement)
@@ -41,7 +41,7 @@ export default function LoginForm() {
                             .from('attempts')
                             .select('id')
                             .eq('user_id', existingUser.id)
-                            .single()
+                            .maybeSingle()
 
                         if (attempt) {
                             router.push('/thank-you')

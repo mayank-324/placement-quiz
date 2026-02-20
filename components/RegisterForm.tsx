@@ -178,7 +178,7 @@ export default function RegisterForm() {
                 .from('users')
                 .select('email')
                 .eq('email', basic.personalEmail)
-                .single()
+                .maybeSingle()
 
             if (existingUser) {
                 setError("This email is already registered. Please login instead.")
@@ -191,7 +191,7 @@ export default function RegisterForm() {
                 .from('users')
                 .insert([{ email: basic.personalEmail, password: password, role: 'student' }])
                 .select()
-                .single()
+                .maybeSingle()
 
             if (createError) {
                 console.error("Supabase Insert Error:", createError);

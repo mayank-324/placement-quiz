@@ -60,7 +60,7 @@ export default function AdminQuestions() {
             .from('users')
             .select('role')
             .eq('id', userId)
-            .single()
+            .maybeSingle()
 
         if (userError || !userData || userData.role !== 'admin') {
             console.error("Unauthorized access attempt or user not found")

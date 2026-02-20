@@ -40,10 +40,16 @@ export default function QuizComponent() {
 
     // Load state from localStorage on mount
     useEffect(() => {
-        const storedIndex = localStorage.getItem('quiz_current_index')
-        const storedAnswers = localStorage.getItem('quiz_answers')
-        const storedStartTime = localStorage.getItem('quiz_start_time')
-        const storedViolations = localStorage.getItem('quiz_violations')
+        const userId = localStorage.getItem('userId')
+        if (!userId) {
+            router.push('/')
+            return
+        }
+
+        const storedIndex = localStorage.getItem(`quiz_${userId}_current_index`)
+        const storedAnswers = localStorage.getItem(`quiz_${userId}_answers`)
+        const storedStartTime = localStorage.getItem(`quiz_${userId}_start_time`)
+        const storedViolations = localStorage.getItem(`quiz_${userId}_violations`)
 
         if (storedIndex) setCurrentQuestionIndex(parseInt(storedIndex))
         if (storedAnswers) setAnswers(JSON.parse(storedAnswers))
@@ -56,26 +62,33 @@ export default function QuizComponent() {
                 setTimeLeft(remaining)
             } else {
                 setTimeLeft(0)
-                // If time expired while away, we should submit or show error
-                // For now, let the timer effect handle the submission trigger
             }
         } else {
-            // First time loading quiz
-            localStorage.setItem('quiz_start_time', Date.now().toString())
+            // First time loading quiz for THIS user
+            localStorage.setItem(`quiz_${userId}_start_time`, Date.now().toString())
         }
-    }, [])
+    }, [router])
 
     // Save state updates
     useEffect(() => {
-        localStorage.setItem('quiz_current_index', currentQuestionIndex.toString())
+        const userId = localStorage.getItem('userId')
+        if (userId) {
+            localStorage.setItem(`quiz_${userId}_current_index`, currentQuestionIndex.toString())
+        }
     }, [currentQuestionIndex])
 
     useEffect(() => {
-        localStorage.setItem('quiz_answers', JSON.stringify(answers))
+        const userId = localStorage.getItem('userId')
+        if (userId) {
+            localStorage.setItem(`quiz_${userId}_answers`, JSON.stringify(answers))
+        }
     }, [answers])
 
     useEffect(() => {
-        localStorage.setItem('quiz_violations', violations.toString())
+        const userId = localStorage.getItem('userId')
+        if (userId) {
+            localStorage.setItem(`quiz_${userId}_violations`, violations.toString())
+        }
     }, [violations])
 
     useEffect(() => {
@@ -113,7 +126,7 @@ export default function QuizComponent() {
                 .from('attempts')
                 .select('id')
                 .eq('user_id', userId)
-                .single()
+                .maybeSingle()
 
             if (existingAttempt) {
                 router.push('/thank-you')
@@ -208,10 +221,10 @@ export default function QuizComponent() {
             if (error) throw error
 
             // Clear quiz state on successful submission
-            localStorage.removeItem('quiz_current_index')
-            localStorage.removeItem('quiz_answers')
-            localStorage.removeItem('quiz_start_time')
-            localStorage.removeItem('quiz_violations')
+            localStorage.removeItem(`quiz_${userId}_current_index`)
+            localStorage.removeItem(`quiz_${userId}_answers`)
+            localStorage.removeItem(`quiz_${userId}_start_time`)
+            localStorage.removeItem(`quiz_${userId}_violations`)
 
             router.push('/thank-you')
         } catch (err) {
