@@ -25,10 +25,21 @@ export default function AdminDashboard() {
     const fetchData = async () => {
         setLoading(true)
         const userId = localStorage.getItem('userId')
-        const userRole = localStorage.getItem('userRole')
 
-        if (!userId || userRole !== 'admin') {
-            // In a real app, verify with server/db
+        if (!userId) {
+            router.push('/')
+            return
+        }
+
+        // Server-side role verification
+        const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', userId)
+            .single()
+
+        if (userError || !userData || userData.role !== 'admin') {
+            console.error("Unauthorized access attempt or user not found")
             router.push('/')
             return
         }

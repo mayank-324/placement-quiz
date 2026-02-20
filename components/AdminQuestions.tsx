@@ -49,9 +49,21 @@ export default function AdminQuestions() {
     const fetchQuestions = async () => {
         setLoading(true)
         const userId = localStorage.getItem('userId')
-        const userRole = localStorage.getItem('userRole')
 
-        if (!userId || userRole !== 'admin') {
+        if (!userId) {
+            router.push('/')
+            return
+        }
+
+        // Server-side role verification
+        const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', userId)
+            .single()
+
+        if (userError || !userData || userData.role !== 'admin') {
+            console.error("Unauthorized access attempt or user not found")
             router.push('/')
             return
         }
