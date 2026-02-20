@@ -292,7 +292,7 @@ export default function AdminDashboard() {
                                             </tr>
                                             {expandedAttemptId === attempt.id && (
                                                 <tr className="bg-zinc-950/50">
-                                                    <td colSpan={5} className="px-6 py-4">
+                                                    <td colSpan={6} className="px-6 py-4">
                                                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                                                             {questions.map((q) => {
                                                                 const userAnswer = attempt.answers[q.id];
