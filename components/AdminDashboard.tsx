@@ -97,14 +97,16 @@ export default function AdminDashboard() {
     const handleExportCSV = () => {
         if (attempts.length === 0) return
 
-        const headers = ["Student Email", "Score", "Total Questions", "Date", "Violations"]
+        const headers = ["Student Email", "Score", "Total Questions", "Percentage", "Date", "Violations"]
         const csvRows = [headers.join(",")]
 
         attempts.forEach(attempt => {
+            const percentage = ((attempt.score / questions.length) * 100).toFixed(1) + "%"
             const row = [
                 attempt.user_email || "Unknown",
                 attempt.score,
                 questions.length,
+                percentage,
                 new Date(attempt.created_at).toLocaleDateString(),
                 attempt.violations
             ]
@@ -177,6 +179,7 @@ export default function AdminDashboard() {
                                 <tr>
                                     <th className="px-6 py-3">Student</th>
                                     <th className="px-6 py-3">Score</th>
+                                    <th className="px-6 py-3">Percentage</th>
                                     <th className="px-6 py-3">Date</th>
                                     <th className="px-6 py-3">Violations</th>
                                     <th className="px-6 py-3 text-right">Actions</th>
@@ -204,6 +207,11 @@ export default function AdminDashboard() {
                                                                 'bg-red-500/10 text-red-500'}
                           `}>
                                                         {attempt.score} / {questions.length}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className="font-bold text-zinc-300">
+                                                        {((attempt.score / questions.length) * 100).toFixed(1)}%
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-zinc-400">
