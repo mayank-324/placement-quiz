@@ -1,8 +1,9 @@
 export interface Question {
     id: number;
     question_text: string;
-    options: string[]; // parsed from jsonb
-    correct_option: number;
+    options?: string[]; // parsed from jsonb, optional for non-mcq
+    correct_option?: number; // optional for non-mcq
+    type?: 'mcq' | 'coding'; // 'mcq' is default if not provided
 }
 
 export interface User {
@@ -14,8 +15,8 @@ export interface User {
 export interface Attempt {
     id: string;
     user_id: string;
-    score: number;
-    answers: Record<string, number>;
+    score: number; // For MCQ
+    answers: Record<string, number | string>; // index (number) for MCQ, text (string) for coding
     created_at: string;
     user?: { email: string }; // joined
     violations: number;

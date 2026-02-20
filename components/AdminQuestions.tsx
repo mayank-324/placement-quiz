@@ -33,10 +33,16 @@ export default function AdminQuestions() {
     const [questions, setQuestions] = useState<Question[]>([])
     const [loading, setLoading] = useState(true)
     const [isAddOpen, setIsAddOpen] = useState(false)
-    const [newQuestion, setNewQuestion] = useState({
+    const [newQuestion, setNewQuestion] = useState<{
+        question_text: string;
+        options: string[];
+        correct_option: number;
+        type: 'mcq' | 'coding';
+    }>({
         question_text: "",
         options: ["", "", "", ""],
-        correct_option: 0
+        correct_option: 0,
+        type: 'mcq',
     })
     const router = useRouter()
 
@@ -69,8 +75,14 @@ export default function AdminQuestions() {
     }, [router])
 
     const handleAddQuestion = async () => {
-        if (!newQuestion.question_text || newQuestion.options.some(o => !o === undefined || o === "")) {
-            // basic validation
+        if (!newQuestion.question_text) {
+            alert("Question text is required");
+            return;
+        }
+
+        if (newQuestion.type === 'mcq' && newQuestion.options.some(o => o === undefined || o === "")) {
+            alert("All 4 options are required for MCQ questions");
+            return;
         }
 
         try {
@@ -78,8 +90,9 @@ export default function AdminQuestions() {
                 .from('questions')
                 .insert([{
                     question_text: newQuestion.question_text,
-                    options: newQuestion.options,
-                    correct_option: newQuestion.correct_option
+                    options: newQuestion.type === 'mcq' ? newQuestion.options : [],
+                    correct_option: newQuestion.type === 'mcq' ? newQuestion.correct_option : 0,
+                    type: newQuestion.type
                 }])
 
             if (error) throw error
@@ -88,7 +101,8 @@ export default function AdminQuestions() {
             setNewQuestion({
                 question_text: "",
                 options: ["", "", "", ""],
-                correct_option: 0
+                correct_option: 0,
+                type: 'mcq'
             })
             fetchQuestions()
         } catch (err) {
@@ -157,6 +171,21 @@ export default function AdminQuestions() {
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div className="space-y-2">
+                                <Label htmlFor="type">Question Type</Label>
+                                <Select
+                                    value={newQuestion.type}
+                                    onValueChange={(val: 'mcq' | 'coding') => setNewQuestion({ ...newQuestion, type: val })}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="mcq">Multiple Choice Question</SelectItem>
+                                        <SelectItem value="coding">Coding / Text Response</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
                                 <Label htmlFor="question">Question Text</Label>
                                 <Input
                                     id="question"
@@ -164,39 +193,44 @@ export default function AdminQuestions() {
                                     onChange={(e) => setNewQuestion({ ...newQuestion, question_text: e.target.value })}
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label>Options</Label>
-                                {newQuestion.options.map((option, i) => (
-                                    <div key={i} className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded flex items-center justify-center border text-xs font-bold text-muted-foreground">
-                                            {String.fromCharCode(65 + i)}
-                                        </div>
-                                        <Input
-                                            value={option}
-                                            onChange={(e) => updateOption(i, e.target.value)}
-                                            placeholder={`Option ${i + 1}`}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="correct">Correct Answer</Label>
-                                <Select
-                                    value={newQuestion.correct_option.toString()}
-                                    onValueChange={(val) => setNewQuestion({ ...newQuestion, correct_option: parseInt(val) })}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select correct option" />
-                                    </SelectTrigger>
-                                    <SelectContent>
+
+                            {newQuestion.type === 'mcq' && (
+                                <>
+                                    <div className="space-y-2">
+                                        <Label>Options</Label>
                                         {newQuestion.options.map((option, i) => (
-                                            <SelectItem key={i} value={i.toString()}>
-                                                Option {String.fromCharCode(65 + i)}
-                                            </SelectItem>
+                                            <div key={i} className="flex items-center gap-2">
+                                                <div className="w-8 h-8 rounded flex items-center justify-center border text-xs font-bold text-muted-foreground">
+                                                    {String.fromCharCode(65 + i)}
+                                                </div>
+                                                <Input
+                                                    value={option}
+                                                    onChange={(e) => updateOption(i, e.target.value)}
+                                                    placeholder={`Option ${i + 1}`}
+                                                />
+                                            </div>
                                         ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="correct">Correct Answer</Label>
+                                        <Select
+                                            value={newQuestion.correct_option.toString()}
+                                            onValueChange={(val) => setNewQuestion({ ...newQuestion, correct_option: parseInt(val) })}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select correct option" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {newQuestion.options.map((option, i) => (
+                                                    <SelectItem key={i} value={i.toString()}>
+                                                        Option {String.fromCharCode(65 + i)}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </>
+                            )}
                         </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setIsAddOpen(false)}>Cancel</Button>
@@ -224,17 +258,25 @@ export default function AdminQuestions() {
                                     <MarkdownRenderer content={question.question_text} className="prose-p:my-0 text-sm" />
                                 </TableCell>
                                 <TableCell>
-                                    <div className="text-xs text-muted-foreground space-y-1">
-                                        {question.options.map((opt, i) => (
-                                            <div key={i} className={cn(
-                                                "flex items-start gap-2",
-                                                i === question.correct_option ? "text-green-500 font-bold" : ""
-                                            )}>
-                                                <span>{String.fromCharCode(65 + i)}.</span>
-                                                <MarkdownRenderer content={opt} className="prose-p:my-0 prose-code:text-[10px]" />
-                                            </div>
-                                        ))}
-                                    </div>
+                                    {question.type === 'coding' ? (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                                                Coding / Text Question
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="text-xs text-muted-foreground space-y-1">
+                                            {question.options?.map((opt, i) => (
+                                                <div key={i} className={cn(
+                                                    "flex items-start gap-2",
+                                                    i === question.correct_option ? "text-green-500 font-bold" : ""
+                                                )}>
+                                                    <span>{String.fromCharCode(65 + i)}.</span>
+                                                    <MarkdownRenderer content={opt} className="prose-p:my-0 prose-code:text-[10px]" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <Button

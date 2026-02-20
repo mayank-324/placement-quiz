@@ -13,7 +13,7 @@ import { MarkdownRenderer } from "./MarkdownRenderer"
 export default function QuizComponent() {
     const [questions, setQuestions] = useState<Question[]>([])
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
-    const [answers, setAnswers] = useState<Record<number, number>>({}) // questionId -> selectedOptionIndex
+    const [answers, setAnswers] = useState<Record<number, number | string>>({}) // questionId -> selectedOptionIndex (MCQ) or code text (Coding)
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -160,6 +160,13 @@ export default function QuizComponent() {
         }))
     }
 
+    const handleTextAnswer = (text: string) => {
+        setAnswers(prev => ({
+            ...prev,
+            [questions[currentQuestionIndex].id]: text
+        }))
+    }
+
     const handleNext = () => {
         if (currentQuestionIndex < questions.length - 1) {
             setCurrentQuestionIndex(prev => prev + 1)
@@ -183,7 +190,7 @@ export default function QuizComponent() {
         // Calculate score
         let score = 0
         questions.forEach(q => {
-            if (answers[q.id] === q.correct_option) {
+            if (q.type !== 'coding' && q.correct_option !== undefined && answers[q.id] === q.correct_option) {
                 score += 1
             }
         })
@@ -271,42 +278,54 @@ export default function QuizComponent() {
             </CardHeader>
 
             <CardContent className="space-y-3 pt-6">
-                {currentQuestion.options.map((option, index) => (
-                    <div
-                        key={index}
-                        onClick={() => handleOptionSelect(index)}
-                        className={cn(
-                            "relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 group flex items-center",
-                            selectedOption === index
-                                ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
-                                : "border-muted bg-card hover:bg-muted/50 hover:border-muted-foreground/50"
-                        )}
-                    >
+                {currentQuestion.type === 'coding' ? (
+                    <div className="w-full h-full min-h-[300px]">
+                        <textarea
+                            value={(answers[currentQuestion.id] as string) || ''}
+                            onChange={(e) => handleTextAnswer(e.target.value)}
+                            placeholder="Type your code here..."
+                            className="w-full h-64 p-4 rounded-xl border-2 border-muted bg-card text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-all font-mono text-sm resize-y"
+                            spellCheck={false}
+                        />
+                    </div>
+                ) : (
+                    currentQuestion.options?.map((option, index) => (
                         <div
+                            key={index}
+                            onClick={() => handleOptionSelect(index)}
                             className={cn(
-                                "flex items-center justify-center w-8 h-8 rounded-lg border-2 mr-4 text-sm font-bold transition-all",
+                                "relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 group flex items-center",
                                 selectedOption === index
-                                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                                    : "border-muted-foreground/30 text-muted-foreground group-hover:border-primary/50 group-hover:text-primary"
+                                    ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
+                                    : "border-muted bg-card hover:bg-muted/50 hover:border-muted-foreground/50"
                             )}
                         >
-                            {String.fromCharCode(65 + index)}
-                        </div>
-                        <div className={cn(
-                            "flex-1 font-medium transition-colors",
-                            selectedOption === index ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
-                        )}>
-                            <MarkdownRenderer content={option} className="prose-p:my-0" />
-                        </div>
+                            <div
+                                className={cn(
+                                    "flex items-center justify-center w-8 h-8 rounded-lg border-2 mr-4 text-sm font-bold transition-all",
+                                    selectedOption === index
+                                        ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                                        : "border-muted-foreground/30 text-muted-foreground group-hover:border-primary/50 group-hover:text-primary"
+                                )}
+                            >
+                                {String.fromCharCode(65 + index)}
+                            </div>
+                            <div className={cn(
+                                "flex-1 font-medium transition-colors",
+                                selectedOption === index ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                            )}>
+                                <MarkdownRenderer content={option} className="prose-p:my-0" />
+                            </div>
 
-                        <div className={cn(
-                            "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all opacity-0 scale-50",
-                            selectedOption === index && "opacity-100 scale-100 border-primary text-primary"
-                        )}>
-                            {selectedOption === index && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
+                            <div className={cn(
+                                "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all opacity-0 scale-50",
+                                selectedOption === index && "opacity-100 scale-100 border-primary text-primary"
+                            )}>
+                                {selectedOption === index && <div className="w-2.5 h-2.5 bg-primary rounded-full" />}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </CardContent>
 
             <CardFooter className="flex justify-between pt-6 border-t border-border/50 bg-secondary/10">

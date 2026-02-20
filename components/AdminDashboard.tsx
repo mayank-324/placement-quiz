@@ -229,30 +229,40 @@ export default function AdminDashboard() {
                                                     <td colSpan={5} className="px-6 py-4">
                                                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                                                             {questions.map((q) => {
-                                                                const userAnswerIndex = attempt.answers[q.id];
-                                                                const isCorrect = userAnswerIndex === q.correct_option;
+                                                                const userAnswer = attempt.answers[q.id];
+                                                                const isCoding = q.type === 'coding';
+                                                                const isCorrect = !isCoding && userAnswer === q.correct_option;
+
                                                                 return (
                                                                     <div
                                                                         key={q.id}
                                                                         className={`
                                                                                 p-3 rounded-lg border text-xs
-                                                                                ${isCorrect ? 'border-green-900/50 bg-green-900/10' : 'border-red-900/50 bg-red-900/10'}
+                                                                                ${isCoding ? 'border-blue-900/50 bg-blue-900/10' :
+                                                                                isCorrect ? 'border-green-900/50 bg-green-900/10' :
+                                                                                    'border-red-900/50 bg-red-900/10'}
                                                                                 `}
                                                                     >
                                                                         <div className="font-medium text-zinc-300 mb-1">
                                                                             <MarkdownRenderer content={q.question_text} className="prose-p:mt-0 text-[11px]" />
                                                                         </div>
                                                                         <div className="flex flex-col gap-1">
-                                                                            <div className={isCorrect ? "text-green-500" : "text-red-500"}>
-                                                                                <span className="font-bold mr-1">User:</span>
-                                                                                {userAnswerIndex !== undefined ? (
-                                                                                    <MarkdownRenderer content={q.options[userAnswerIndex]} className="prose-p:my-0 text-[11px] inline-block" />
+                                                                            <div className={isCoding ? "text-blue-400" : isCorrect ? "text-green-500" : "text-red-500"}>
+                                                                                <span className="font-bold mr-1">{isCoding ? "Response:" : "User:"}</span>
+                                                                                {userAnswer !== undefined ? (
+                                                                                    isCoding ? (
+                                                                                        <pre className="mt-1 p-2 bg-black/40 rounded border border-white/5 font-mono text-[10px] whitespace-pre-wrap max-h-40 overflow-y-auto">
+                                                                                            {userAnswer}
+                                                                                        </pre>
+                                                                                    ) : (
+                                                                                        <MarkdownRenderer content={q.options?.[userAnswer as number] || 'Error'} className="prose-p:my-0 text-[11px] inline-block" />
+                                                                                    )
                                                                                 ) : 'Skipped'}
                                                                             </div>
-                                                                            {!isCorrect && (
+                                                                            {!isCoding && !isCorrect && q.correct_option !== undefined && (
                                                                                 <div className="text-green-500/70">
                                                                                     <span className="font-bold mr-1">Correct:</span>
-                                                                                    <MarkdownRenderer content={q.options[q.correct_option]} className="prose-p:my-0 text-[11px] inline-block" />
+                                                                                    <MarkdownRenderer content={q.options?.[q.correct_option] || 'Error'} className="prose-p:my-0 text-[11px] inline-block" />
                                                                                 </div>
                                                                             )}
                                                                         </div>
