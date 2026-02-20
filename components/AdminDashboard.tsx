@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Loader2, Search, Download, RefreshCw, ChevronDown, ChevronUp } from "lucide-react"
+import { Loader2, Search, Download, RefreshCw, ChevronDown, ChevronUp, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { Attempt, User, Question } from "@/lib/types"
 import { MarkdownRenderer } from "./MarkdownRenderer"
 
@@ -20,6 +20,10 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true)
     const [expandedAttemptId, setExpandedAttemptId] = useState<string | null>(null)
     const [searchTerm, setSearchTerm] = useState("")
+    const [sortConfig, setSortConfig] = useState<{ key: 'user_email' | 'score' | null, direction: 'asc' | 'desc' }>({
+        key: null,
+        direction: 'desc'
+    })
     const router = useRouter()
 
     const fetchData = async () => {
@@ -90,9 +94,28 @@ export default function AdminDashboard() {
         setExpandedAttemptId(expandedAttemptId === id ? null : id)
     }
 
-    const filteredAttempts = attempts.filter(attempt =>
-        attempt.user_email?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    const handleSort = (key: 'user_email' | 'score') => {
+        let direction: 'asc' | 'desc' = 'asc'
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc'
+        }
+        setSortConfig({ key, direction })
+    }
+
+    const filteredAttempts = attempts
+        .filter(attempt =>
+            attempt.user_email?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .sort((a, b) => {
+            if (!sortConfig.key) return 0
+
+            let valA = sortConfig.key === 'user_email' ? (a.user_email || '') : a.score
+            let valB = sortConfig.key === 'user_email' ? (b.user_email || '') : b.score
+
+            if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1
+            if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1
+            return 0
+        })
 
     const handleExportCSV = () => {
         if (attempts.length === 0) return
@@ -177,9 +200,33 @@ export default function AdminDashboard() {
                         <table className="w-full text-sm text-left">
                             <thead className="bg-zinc-800/50 text-zinc-400 uppercase">
                                 <tr>
-                                    <th className="px-6 py-3">Student</th>
+                                    <th
+                                        className="px-6 py-3 cursor-pointer hover:text-white transition-colors"
+                                        onClick={() => handleSort('user_email')}
+                                    >
+                                        <div className="flex items-center gap-1">
+                                            Student
+                                            {sortConfig.key === 'user_email' ? (
+                                                sortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                                            ) : (
+                                                <ArrowUpDown className="h-3 w-3 opacity-30" />
+                                            )}
+                                        </div>
+                                    </th>
                                     <th className="px-6 py-3">Score</th>
-                                    <th className="px-6 py-3">Percentage</th>
+                                    <th
+                                        className="px-6 py-3 cursor-pointer hover:text-white transition-colors"
+                                        onClick={() => handleSort('score')}
+                                    >
+                                        <div className="flex items-center gap-1">
+                                            Percentage
+                                            {sortConfig.key === 'score' ? (
+                                                sortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                                            ) : (
+                                                <ArrowUpDown className="h-3 w-3 opacity-30" />
+                                            )}
+                                        </div>
+                                    </th>
                                     <th className="px-6 py-3">Date</th>
                                     <th className="px-6 py-3">Violations</th>
                                     <th className="px-6 py-3 text-right">Actions</th>
