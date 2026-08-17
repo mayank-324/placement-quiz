@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, CheckCircle2, AlertCircle } from "lucide-react"
+import { Loader2, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Question } from "@/lib/types"
 import { MarkdownRenderer } from "./MarkdownRenderer"
@@ -280,7 +280,7 @@ export default function QuizComponent() {
                         <li>You have a total of <strong className="text-foreground">30 minutes</strong> to complete the test.</li>
                         <li>Once the timer starts, it cannot be paused.</li>
                         <li><strong className="text-red-400">Do not switch tabs or open other applications</strong>. Doing so will be recorded as a violation and may result in disqualification.</li>
-                        <li>You can navigate between questions using the 'Next' and 'Previous' buttons.</li>
+                        <li>You can navigate between questions using the &apos;Next&apos; and &apos;Previous&apos; buttons.</li>
                         <li>Ensure you have a stable internet connection before proceeding.</li>
                     </ul>
                 </CardContent>

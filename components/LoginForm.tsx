@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -122,7 +121,7 @@ export default function LoginForm() {
                             )}
                         </Button>
                         <div className="text-center text-sm">
-                            <span className="text-muted-foreground mr-1">Don't have an account?</span>
+                            <span className="text-muted-foreground mr-1">Don&apos;t have an account?</span>
                             <button
                                 type="button"
                                 onClick={() => router.push('/register')}

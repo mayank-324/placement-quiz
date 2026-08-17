@@ -4,26 +4,73 @@ import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Loader2, ArrowLeft, Download, ExternalLink, Mail, Phone, MapPin, Calendar, GraduationCap, Code2, FileText, CheckCircle2 } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Loader2, ArrowLeft, Download, ExternalLink, Mail, GraduationCap, Code2, FileText, CheckCircle2 } from "lucide-react"
+
+interface ProfileRecord {
+    id?: string;
+    user_id?: string;
+    full_name: string;
+    personal_email: string;
+    mobile: string;
+    dob: string;
+    current_city: string;
+    permanent_address: string;
+    gender?: string;
+    college: string;
+    university: string;
+    degree: string;
+    branch: string;
+    year_of_passing: string;
+    cgpa: number;
+    tenth_percentage: number;
+    twelfth_percentage: number;
+    backlogs: string;
+    backlog_count?: number;
+    primary_language: string;
+    secondary_language: string;
+    database_knowledge: string;
+    framework_experience: string;
+    git: string;
+    internship: string;
+    internship_details?: string;
+    live_projects: string;
+    github_link?: string;
+    github_url?: string;
+    linkedin_url?: string;
+    portfolio?: string;
+    resume_url?: string;
+    certificates_url?: string;
+    full_time_onsite: string;
+    notice_period?: string;
+    expected_salary?: string;
+    relocate: string;
+    confirm_test_identity: boolean;
+    no_unfair_means: boolean;
+    webcam_permission: boolean;
+    screen_monitoring_consent: boolean;
+}
 
 export default function StudentProfilePage() {
     const { id } = useParams()
     const router = useRouter()
-    const [profile, setProfile] = useState<any>(null)
+    const [profile, setProfile] = useState<ProfileRecord | null>(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         const fetchProfile = async () => {
-            const adminId = localStorage.getItem('userId')
-            const adminRole = localStorage.getItem('userRole')
-
-            if (!adminId || adminRole !== 'admin') {
-                router.push('/')
-                return
-            }
-
             try {
+                const res = await fetch('/api/auth/me')
+                if (!res.ok) {
+                    router.push('/')
+                    return
+                }
+                const { user } = await res.json()
+                if (user?.role !== 'admin') {
+                    router.push('/')
+                    return
+                }
+
                 const { data, error } = await supabase
                     .from('profiles')
                     .select('*')

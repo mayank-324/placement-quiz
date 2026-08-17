@@ -67,7 +67,9 @@ export const MarkdownRenderer = ({ content, className }: MarkdownRendererProps) 
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
-                    code({ node, inline, className, children, ...props }: any) {
+                    code(props) {
+                        const { className, children, ...rest } = props
+                        const inline = 'inline' in props ? Boolean((props as { inline?: boolean }).inline) : false
                         const match = /language-(\w+)/.exec(className || '')
 
                         if (!inline && match) {
@@ -77,7 +79,6 @@ export const MarkdownRenderer = ({ content, className }: MarkdownRendererProps) 
                                         <span>{match[1].toUpperCase()}</span>
                                     </div>
                                     <SyntaxHighlighter
-                                        {...props}
                                         style={vscDarkPlus}
                                         language={match[1]}
                                         PreTag="div"
@@ -103,7 +104,7 @@ export const MarkdownRenderer = ({ content, className }: MarkdownRendererProps) 
                         }
 
                         return (
-                            <code className={cn("bg-zinc-800/10 px-1.5 py-0.5 rounded text-primary font-mono text-sm border border-primary/10", className)} {...props}>
+                            <code className={cn("bg-zinc-800/10 px-1.5 py-0.5 rounded text-primary font-mono text-sm border border-primary/10", className)} {...rest}>
                                 {children}
                             </code>
                         )

@@ -73,7 +73,9 @@ export default function AdminQuestions() {
             .select('*')
             .order('id')
 
-        if (data) {
+        if (error) {
+            console.error("Error fetching questions:", error)
+        } else if (data) {
             setQuestions(data.map(q => ({
                 ...q,
                 options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options

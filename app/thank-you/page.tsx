@@ -1,10 +1,26 @@
 
-import Link from "next/link";
+"use client"
+
+import { useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2, LogOut } from "lucide-react";
 
 export default function ThankYouPage() {
+    const [loading, setLoading] = useState(false);
+
+    const handleReturnHome = async () => {
+        setLoading(true);
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+        } catch (err) {
+            console.error("Logout error:", err);
+        } finally {
+            window.location.href = '/';
+        }
+    };
+
     return (
         <main className="min-h-screen flex flex-col items-center justify-between p-4 md:p-8 bg-background relative overflow-hidden">
             {/* Background */}
@@ -13,7 +29,7 @@ export default function ThankYouPage() {
             {/* Header */}
             <header className="w-full max-w-7xl flex items-center justify-center py-4 z-10">
                 <div className="h-10 w-10 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center text-white font-bold text-xl mr-3">
-                    <img src="/icon.png" alt="icon" />
+                    <Image src="/icon.png" alt="icon" width={40} height={40} />
                 </div>
                 <span className="font-bold text-2xl tracking-tight text-foreground/90">Percept Software Systems</span>
             </header>
@@ -35,8 +51,23 @@ export default function ThankYouPage() {
                         <p className="text-muted-foreground leading-relaxed">
                             Your responses have been recorded successfully. Percept Software Systems team will review your performance and get back to you shortly.
                         </p>
-                        <Button asChild className="w-full h-11 text-base shadow-lg shadow-primary/20" variant="default">
-                            <Link href="/">Return to Home</Link>
+                        <Button
+                            onClick={handleReturnHome}
+                            disabled={loading}
+                            className="w-full h-11 text-base shadow-lg shadow-primary/20"
+                            variant="default"
+                        >
+                            {loading ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Logging out...
+                                </>
+                            ) : (
+                                <>
+                                    <LogOut className="mr-2 h-4 w-4" />
+                                    Exit & Return to Home
+                                </>
+                            )}
                         </Button>
                     </CardContent>
                 </Card>

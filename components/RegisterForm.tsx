@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Upload, FileText } from "lucide-react"
-import { RegistrationData, BasicInfo, AcademicInfo, TechnicalInfo, AvailabilityInfo, DeclarationInfo } from "@/lib/types"
+import { BasicInfo, AcademicInfo, TechnicalInfo, AvailabilityInfo, DeclarationInfo } from "@/lib/types"
 import { hashSync } from "bcryptjs"
 
 const initialBasic: BasicInfo = {
@@ -146,7 +146,7 @@ export default function RegisterForm() {
         const fileName = `${userId}_${type}_${Math.random()}.${fileExt}`
         const filePath = `${userId}/${fileName}`
 
-        const { error: uploadError, data } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
             .from('resumes')
             .upload(filePath, file)
 
@@ -208,7 +208,7 @@ export default function RegisterForm() {
                 try {
                     if (resumeFile) resumeUrl = await uploadFile(resumeFile, newUser.id, 'resume')
                     if (certificateFile) certUrl = await uploadFile(certificateFile, newUser.id, 'certificate')
-                } catch (storeError: any) {
+                } catch (storeError: unknown) {
                     console.warn("Storage upload failed, bucket might not be configured.", storeError)
                 }
 
@@ -274,9 +274,10 @@ export default function RegisterForm() {
                     router.push('/'); // Fallback to login
                 }
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
-            setError(err.message || "Registration failed. Please try again.")
+            const errorMessage = err instanceof Error ? err.message : "Registration failed. Please try again."
+            setError(errorMessage)
         } finally {
             setLoading(false)
         }
@@ -760,7 +761,7 @@ export default function RegisterForm() {
                             <div className="bg-primary/5 rounded-lg border border-primary/20 p-4 flex items-center gap-3">
                                 <AlertCircle className="h-5 w-5 text-primary shrink-0" />
                                 <p className="text-xs text-muted-foreground leading-relaxed">
-                                    By clicking 'Complete Registration', you understand that any violation of the above rules may lead to immediate disqualification.
+                                    By clicking &apos;Complete Registration&apos;, you understand that any violation of the above rules may lead to immediate disqualification.
                                 </p>
                             </div>
                         </div>

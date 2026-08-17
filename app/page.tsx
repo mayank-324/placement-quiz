@@ -1,3 +1,4 @@
+import Image from "next/image";
 import LoginForm from "@/components/LoginForm";
 
 export default function Home() {
@@ -9,14 +10,14 @@ export default function Home() {
       {/* Header */}
       <header className="w-full max-w-7xl flex items-center gap-3 py-4 z-10 animate-in fade-in slide-in-from-top-4 duration-500">
         <div className="bg-primary h-10 w-10 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center text-primary-foreground font-bold text-xl">
-          <img src="/icon.png" alt="icon" />
+          <Image src="/icon.png" alt="icon" width={40} height={40} />
         </div>
         <span className="font-bold text-2xl tracking-tight text-foreground/90">Percept Software Systems</span>
       </header>
 
       {/* Main */}
       <div className="flex-1 w-full max-w-md flex flex-col justify-center gap-8 relative z-10">
-        <div className="absolute -top-20left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+        <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
         <LoginForm />
       </div>
 

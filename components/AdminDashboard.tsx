@@ -4,10 +4,10 @@ import { useState, useEffect, Fragment } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Loader2, Search, Download, RefreshCw, ChevronDown, ChevronUp, ArrowUpDown, ArrowUp, ArrowDown, LogOut } from "lucide-react"
-import { Attempt, User, Question } from "@/lib/types"
+import { Attempt, Question } from "@/lib/types"
 import { MarkdownRenderer } from "./MarkdownRenderer"
 
 interface AttemptWithDetails extends Attempt {
@@ -73,7 +73,7 @@ export default function AdminDashboard() {
             if (attemptsData) {
                 const formattedAttempts = attemptsData.map(a => ({
                     ...a,
-                    user_email: (a.users as any)?.email // Adjust based on actual response structure
+                    user_email: (a.users as { email?: string } | null)?.email
                 }))
                 setAttempts(formattedAttempts)
             }
@@ -108,8 +108,8 @@ export default function AdminDashboard() {
         .sort((a, b) => {
             if (!sortConfig.key) return 0
 
-            let valA = sortConfig.key === 'user_email' ? (a.user_email || '') : a.score
-            let valB = sortConfig.key === 'user_email' ? (b.user_email || '') : b.score
+            const valA = sortConfig.key === 'user_email' ? (a.user_email || '') : a.score
+            const valB = sortConfig.key === 'user_email' ? (b.user_email || '') : b.score
 
             if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1
             if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1
@@ -246,7 +246,7 @@ export default function AdminDashboard() {
                             <tbody className="divide-y divide-zinc-800">
                                 {filteredAttempts.length === 0 ? (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-8 text-center text-zinc-500">
+                                        <td colSpan={6} className="px-6 py-8 text-center text-zinc-500">
                                             No attempts found.
                                         </td>
                                     </tr>

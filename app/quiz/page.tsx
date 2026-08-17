@@ -1,3 +1,4 @@
+import Image from "next/image";
 import QuizComponent from "@/components/QuizComponent";
 
 export default function QuizPage() {
@@ -10,7 +11,7 @@ export default function QuizPage() {
             <header className="w-full max-w-7xl flex items-center justify-between mb-8 z-10">
                 <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-md">
-                        <img src="/icon.png" alt="icon" />
+                        <Image src="/icon.png" alt="icon" width={36} height={36} />
                     </div>
                     <span className="font-bold text-xl tracking-tight hidden md:block">Percept Software Systems</span>
                 </div>
