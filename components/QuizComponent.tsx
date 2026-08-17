@@ -185,6 +185,25 @@ export default function QuizComponent() {
         }))
     }
 
+    const handleCodeKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const textarea = e.currentTarget;
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const currentValue = textarea.value;
+            const tabSpaces = "    "; // 4 spaces for indentation
+
+            const newValue = currentValue.substring(0, start) + tabSpaces + currentValue.substring(end);
+            handleTextAnswer(newValue);
+
+            // Keep cursor right after inserted spaces
+            requestAnimationFrame(() => {
+                textarea.selectionStart = textarea.selectionEnd = start + tabSpaces.length;
+            });
+        }
+    }
+
     const handleNext = () => {
         if (currentQuestionIndex < questions.length - 1) {
             setCurrentQuestionIndex(prev => prev + 1)
@@ -330,6 +349,7 @@ export default function QuizComponent() {
                         <textarea
                             value={(answers[currentQuestion.id] as string) || ''}
                             onChange={(e) => handleTextAnswer(e.target.value)}
+                            onKeyDown={handleCodeKeyDown}
                             placeholder="Type your code here..."
                             className="w-full h-64 p-4 rounded-xl border-2 border-muted bg-card text-foreground focus:border-primary focus:ring-1 focus:ring-primary transition-all font-mono text-sm resize-y"
                             spellCheck={false}
