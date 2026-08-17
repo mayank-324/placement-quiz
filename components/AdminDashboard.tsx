@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Loader2, Search, Download, RefreshCw, ChevronDown, ChevronUp, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
+import { Loader2, Search, Download, RefreshCw, ChevronDown, ChevronUp, ArrowUpDown, ArrowUp, ArrowDown, LogOut } from "lucide-react"
 import { Attempt, User, Question } from "@/lib/types"
 import { MarkdownRenderer } from "./MarkdownRenderer"
 
@@ -28,22 +28,21 @@ export default function AdminDashboard() {
 
     const fetchData = async () => {
         setLoading(true)
-        const userId = localStorage.getItem('userId')
 
-        if (!userId) {
-            router.push('/')
-            return
-        }
-
-        // Server-side role verification
-        const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', userId)
-            .maybeSingle()
-
-        if (userError || !userData || userData.role !== 'admin') {
-            console.error("Unauthorized access attempt or user not found")
+        // Server-side role verification via API
+        try {
+            const res = await fetch('/api/auth/me')
+            if (!res.ok) {
+                router.push('/')
+                return
+            }
+            const { user } = await res.json()
+            if (user?.role !== 'admin') {
+                router.push('/')
+                return
+            }
+        } catch (err) {
+            console.error("Auth check failed", err)
             router.push('/')
             return
         }
@@ -148,6 +147,15 @@ export default function AdminDashboard() {
         window.URL.revokeObjectURL(url)
     }
 
+    const handleLogout = async () => {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' })
+            router.push('/')
+        } catch (err) {
+            console.error('Logout failed:', err)
+        }
+    }
+
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-[50vh]">
@@ -179,6 +187,9 @@ export default function AdminDashboard() {
                         disabled={attempts.length === 0}
                     >
                         <Download className="mr-2 h-4 w-4" /> Export CSV
+                    </Button>
+                    <Button variant="destructive" onClick={handleLogout}>
+                        <LogOut className="mr-2 h-4 w-4" /> Logout
                     </Button>
                 </div>
             </div>

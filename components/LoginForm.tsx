@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Lock, Mail, Loader2 } from "lucide-react"
+import { Lock, Mail, Loader2, EyeOff, Eye } from "lucide-react"
 
 export default function LoginForm() {
     const [email, setEmail] = useState("")
@@ -14,6 +14,7 @@ export default function LoginForm() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const router = useRouter()
+    const [showPassword, setShowPassword] = useState(false)
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -21,39 +22,18 @@ export default function LoginForm() {
         setError(null)
 
         try {
-            // Check if user exists
-            const { data: existingUser, error: fetchError } = await supabase
-                .from('users')
-                .select('*')
-                .eq('email', email)
-                .maybeSingle()
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
 
-            if (existingUser) {
-                // User exists, verify password (simple comparison as per requirement)
-                if (existingUser.password === password) {
-                    localStorage.setItem('userId', existingUser.id)
-                    localStorage.setItem('userRole', existingUser.role)
-                    if (existingUser.role === 'admin') {
-                        router.push('/admin')
-                    } else {
-                        // Check if student has already attempted
-                        const { data: attempt } = await supabase
-                            .from('attempts')
-                            .select('id')
-                            .eq('user_id', existingUser.id)
-                            .maybeSingle()
+            const data = await res.json();
 
-                        if (attempt) {
-                            router.push('/thank-you')
-                        } else {
-                            router.push('/quiz')
-                        }
-                    }
-                } else {
-                    setError("Invalid credetials! If you're new, Please Register First.")
-                }
+            if (res.ok) {
+                router.push(data.redirectTo);
             } else {
-                setError("Invalid credetials! If you're new, Please Register First.")
+                setError(data.error || "Invalid credentials. If you're new, please register first.");
             }
         } catch (err) {
             console.error(err)
@@ -61,6 +41,10 @@ export default function LoginForm() {
         } finally {
             setLoading(false)
         }
+    }
+
+    const handleEyeClick = () => {
+        setShowPassword(!showPassword)
     }
 
     return (
@@ -104,13 +88,20 @@ export default function LoginForm() {
                         <div className="relative group">
                             <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                             <Input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 placeholder="Password"
                                 className="pl-10 h-11 bg-background/50 border-input focus:border-primary/50 transition-all"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
+                            {
+                                showPassword ? (
+                                    <EyeOff className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" onClick={handleEyeClick} />
+                                ) : (
+                                    <Eye className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" onClick={handleEyeClick} />
+                                )
+                            }
                         </div>
                     </div>
                 </CardContent>

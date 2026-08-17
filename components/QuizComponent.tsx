@@ -20,6 +20,15 @@ export default function QuizComponent() {
     const router = useRouter()
     const [timeLeft, setTimeLeft] = useState(1800);
     const [violations, setViolations] = useState(0);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [hasStarted, setHasStarted] = useState(false);
+
+    useEffect(() => {
+        fetch('/api/auth/me').then(res => res.json()).then(data => {
+            if (data.user?.userId) setUserId(data.user.userId)
+            else router.push('/')
+        }).catch(() => router.push('/'))
+    }, [router])
 
     //detect change in tab, blur, etc
     useEffect(() => {
@@ -40,11 +49,7 @@ export default function QuizComponent() {
 
     // Load state from localStorage on mount
     useEffect(() => {
-        const userId = localStorage.getItem('userId')
-        if (!userId) {
-            router.push('/')
-            return
-        }
+        if (!userId) return
 
         const storedIndex = localStorage.getItem(`quiz_${userId}_current_index`)
         const storedAnswers = localStorage.getItem(`quiz_${userId}_answers`)
@@ -56,6 +61,7 @@ export default function QuizComponent() {
         if (storedViolations) setViolations(parseInt(storedViolations))
 
         if (storedStartTime) {
+            setHasStarted(true) // User had already started
             const elapsed = Math.floor((Date.now() - parseInt(storedStartTime)) / 1000)
             const remaining = 1800 - elapsed
             if (remaining > 0) {
@@ -63,35 +69,32 @@ export default function QuizComponent() {
             } else {
                 setTimeLeft(0)
             }
-        } else {
-            // First time loading quiz for THIS user
-            localStorage.setItem(`quiz_${userId}_start_time`, Date.now().toString())
         }
-    }, [router])
+        // We do NOT set start time here anymore. We wait for the Start button.
+    }, [userId])
 
     // Save state updates
     useEffect(() => {
-        const userId = localStorage.getItem('userId')
         if (userId) {
             localStorage.setItem(`quiz_${userId}_current_index`, currentQuestionIndex.toString())
         }
-    }, [currentQuestionIndex])
+    }, [currentQuestionIndex, userId])
 
     useEffect(() => {
-        const userId = localStorage.getItem('userId')
         if (userId) {
             localStorage.setItem(`quiz_${userId}_answers`, JSON.stringify(answers))
         }
-    }, [answers])
+    }, [answers, userId])
 
     useEffect(() => {
-        const userId = localStorage.getItem('userId')
         if (userId) {
             localStorage.setItem(`quiz_${userId}_violations`, violations.toString())
         }
-    }, [violations])
+    }, [violations, userId])
 
     useEffect(() => {
+        if (!hasStarted) return; // Only run timer if quiz has started
+
         if (timeLeft <= 0) {
             // Only submit if questions are loaded and we are not already submitting
             if (questions.length > 0 && !submitting) {
@@ -111,15 +114,11 @@ export default function QuizComponent() {
             });
         }, 1000);
         return () => clearInterval(timer)
-    }, [timeLeft, questions.length, submitting])
+    }, [timeLeft, questions.length, submitting, hasStarted])
 
     useEffect(() => {
         const fetchQuestions = async () => {
-            const userId = localStorage.getItem('userId')
-            if (!userId) {
-                router.push('/')
-                return
-            }
+            if (!userId) return
 
             // Check if already attempted
             const { data: existingAttempt } = await supabase
@@ -158,7 +157,13 @@ export default function QuizComponent() {
         }
 
         fetchQuestions()
-    }, [router])
+    }, [router, userId])
+
+    const handleStartQuiz = () => {
+        if (!userId) return;
+        setHasStarted(true);
+        localStorage.setItem(`quiz_${userId}_start_time`, Date.now().toString());
+    }
 
     const convertToMMSS = (seconds: number) => {
         const mm = Math.floor(seconds / 60);
@@ -197,7 +202,6 @@ export default function QuizComponent() {
     const submitQuiz = async () => {
         if (submitting) return
         setSubmitting(true)
-        const userId = localStorage.getItem('userId')
         if (!userId) return
 
         // Calculate score
@@ -234,7 +238,7 @@ export default function QuizComponent() {
         }
     }
 
-    if (loading) {
+    if (loading || !userId) {
         return (
             <div className="flex justify-center items-center min-h-[50vh]">
                 <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
@@ -263,6 +267,36 @@ export default function QuizComponent() {
         )
     }
 
+    if (!hasStarted) {
+        return (
+            <Card className="w-full border-border bg-card/60 backdrop-blur-xl shadow-2xl overflow-hidden">
+                <CardHeader className="bg-secondary/30 pb-6">
+                    <CardTitle className="text-2xl font-bold tracking-tight">Assessment Instructions</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6 pt-6 text-muted-foreground">
+                    <p className="text-foreground font-medium">Please read the following instructions carefully before starting the assessment:</p>
+                    <ul className="list-disc pl-5 space-y-3">
+                        <li>The assessment consists of <strong className="text-foreground">{questions.length} questions</strong>.</li>
+                        <li>You have a total of <strong className="text-foreground">30 minutes</strong> to complete the test.</li>
+                        <li>Once the timer starts, it cannot be paused.</li>
+                        <li><strong className="text-red-400">Do not switch tabs or open other applications</strong>. Doing so will be recorded as a violation and may result in disqualification.</li>
+                        <li>You can navigate between questions using the 'Next' and 'Previous' buttons.</li>
+                        <li>Ensure you have a stable internet connection before proceeding.</li>
+                    </ul>
+                </CardContent>
+                <CardFooter className="flex justify-end pt-6 border-t border-border/50 bg-secondary/10">
+                    <Button
+                        onClick={handleStartQuiz}
+                        size="lg"
+                        className="px-8 shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all hover:scale-[1.02]"
+                    >
+                        Start Assessment
+                    </Button>
+                </CardFooter>
+            </Card>
+        )
+    }
+
     const currentQuestion = questions[currentQuestionIndex]
     const isLastQuestion = currentQuestionIndex === questions.length - 1
     const selectedOption = answers[currentQuestion.id]
@@ -280,7 +314,7 @@ export default function QuizComponent() {
                     <span>Time: {convertToMMSS(timeLeft)}</span>
                 </div>
                 <div className="text-xl md:text-2xl font-semibold leading-relaxed">
-                    <MarkdownRenderer content={currentQuestion.question_text} />
+                    <MarkdownRenderer content={currentQuestion.question_text} className="prose-p:my-0" />
                 </div>
                 <div className="w-full bg-secondary h-1.5 mt-6 rounded-full overflow-hidden">
                     <div

@@ -19,22 +19,47 @@ export const MarkdownRenderer = ({ content, className }: MarkdownRendererProps) 
         // If it already has markdown code blocks or inline code, use as is
         if (content.includes('`')) return content
 
-        // Detection patterns for raw code
-        const codePatterns = [
-            /#include/, /import .* from/, /public class/, /def .*\(.*\):/,
-            /function.*\{/, /int main/, /\{[\s\S]*\}/, /;[\s\n]*$/m,
-            /\[[\s\S]*\]/
-        ]
+        // Detection patterns for the START of code within a mixed string
+        const codeStartMatch = content.match(/(#include\s+<[^>]+>|import\s+.*?\s+from|public\s+class|def\s+.*\(.*\):|function\s+.*\{|int\s+main\s*\()/);
 
-        const isLikelyCode = codePatterns.some(pattern => pattern.test(content))
+        let prefix = "";
+        let codePart = content;
 
-        if (isLikelyCode) {
-            // Check if it looks like C/C++ (common in the provided example)
-            const lang = content.includes('#include') ? 'cpp' : ''
-            return `\`\`\`${lang}\n${content}\n\`\`\``
+        if (codeStartMatch && codeStartMatch.index !== undefined && codeStartMatch.index > 0) {
+            prefix = content.substring(0, codeStartMatch.index).trim();
+            codePart = content.substring(codeStartMatch.index).trim();
+        } else {
+            // Detection patterns for raw code
+            const codePatterns = [
+                /#include/, /import .* from/, /public class/, /def .*\(.*\):/,
+                /function.*\{/, /int main/, /\{[\s\S]*\}/, /;[\s\n]*$/m,
+                /\[[\s\S]*\]/
+            ];
+            const isLikelyCode = codePatterns.some(pattern => pattern.test(content));
+            if (!isLikelyCode) return content;
         }
 
-        return content
+        // Basic formatting for single-line code to make it readable
+        let formattedCode = codePart;
+        if (!codePart.includes('\n')) {
+            formattedCode = codePart
+                .replace(/\{/g, ' {\n  ')
+                .replace(/\}/g, '\n}\n')
+                .replace(/;/g, ';\n  ')
+                // Fix spacing issues from naive replacement
+                .replace(/\n\s*\n/g, '\n')
+                .replace(/  \n/g, '\n')
+                .trim();
+        }
+
+        const lang = codePart.includes('#include') || codePart.includes('int main') ? 'cpp' : 
+                     codePart.includes('import ') ? 'javascript' :
+                     codePart.includes('public class') ? 'java' :
+                     codePart.includes('def ') ? 'python' : '';
+
+        return prefix 
+            ? `${prefix}\n\n\`\`\`${lang}\n${formattedCode}\n\`\`\``
+            : `\`\`\`${lang}\n${formattedCode}\n\`\`\``;
     })()
 
     return (

@@ -22,9 +22,10 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, Plus, Trash2, ArrowLeft } from "lucide-react"
+import { Loader2, Plus, Trash2, ArrowLeft, LogOut } from "lucide-react"
 import { Question } from "@/lib/types"
 import { MarkdownRenderer } from "./MarkdownRenderer"
 import { cn } from "@/lib/utils"
@@ -48,22 +49,21 @@ export default function AdminQuestions() {
 
     const fetchQuestions = async () => {
         setLoading(true)
-        const userId = localStorage.getItem('userId')
 
-        if (!userId) {
-            router.push('/')
-            return
-        }
-
-        // Server-side role verification
-        const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', userId)
-            .maybeSingle()
-
-        if (userError || !userData || userData.role !== 'admin') {
-            console.error("Unauthorized access attempt or user not found")
+        // Server-side role verification via API
+        try {
+            const res = await fetch('/api/auth/me')
+            if (!res.ok) {
+                router.push('/')
+                return
+            }
+            const { user } = await res.json()
+            if (user?.role !== 'admin') {
+                router.push('/')
+                return
+            }
+        } catch (err) {
+            console.error("Auth check failed", err)
             router.push('/')
             return
         }
@@ -146,6 +146,15 @@ export default function AdminQuestions() {
         setNewQuestion({ ...newQuestion, options: newOptions })
     }
 
+    const handleLogout = async () => {
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' })
+            router.push('/')
+        } catch (err) {
+            console.error('Logout failed:', err)
+        }
+    }
+
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-[50vh]">
@@ -199,7 +208,7 @@ export default function AdminQuestions() {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="question">Question Text</Label>
-                                <Input
+                                <Textarea
                                     id="question"
                                     value={newQuestion.question_text}
                                     onChange={(e) => setNewQuestion({ ...newQuestion, question_text: e.target.value })}
@@ -250,6 +259,9 @@ export default function AdminQuestions() {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+                <Button variant="destructive" onClick={handleLogout} className="ml-2">
+                    <LogOut className="mr-2 h-4 w-4" /> Logout
+                </Button>
             </div>
 
             <div className="rounded-md border border-border">

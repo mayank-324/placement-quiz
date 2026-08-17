@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Upload, FileText } from "lucide-react"
 import { RegistrationData, BasicInfo, AcademicInfo, TechnicalInfo, AvailabilityInfo, DeclarationInfo } from "@/lib/types"
+import { hashSync } from "bcryptjs"
 
 const initialBasic: BasicInfo = {
     fullName: "",
@@ -186,10 +187,11 @@ export default function RegisterForm() {
                 return
             }
 
-            // 1. Create User
+            // 1. Create User with Hashed Password
+            const hashedPassword = hashSync(password, 10)
             const { data: newUser, error: createError } = await supabase
                 .from('users')
-                .insert([{ email: basic.personalEmail, password: password, role: 'student' }])
+                .insert([{ email: basic.personalEmail, password: hashedPassword, role: 'student' }])
                 .select()
                 .maybeSingle()
 
@@ -258,7 +260,19 @@ export default function RegisterForm() {
                     throw profileError
                 }
 
-                router.push('/')
+                // Automatically log the user in
+                const loginRes = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: basic.personalEmail, password: password })
+                });
+
+                if (loginRes.ok) {
+                    const data = await loginRes.json();
+                    router.push(data.redirectTo || '/quiz');
+                } else {
+                    router.push('/'); // Fallback to login
+                }
             }
         } catch (err: any) {
             console.error(err)
