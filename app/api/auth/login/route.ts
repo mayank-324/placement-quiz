@@ -43,21 +43,21 @@ export async function POST(request: Request) {
         if (user.role === 'admin') {
             redirectTo = '/admin';
         } else {
-             // Check if student has already attempted
-             const { data: attempt } = await supabase
-                 .from('attempts')
-                 .select('id')
-                 .eq('user_id', user.id)
-                 .maybeSingle();
+            // Check if student has already attempted
+            const { data: attempt } = await supabase
+                .from('attempts')
+                .select('id')
+                .eq('user_id', user.id)
+                .maybeSingle();
 
-             if (attempt) {
-                 redirectTo = '/thank-you';
-             }
+            if (attempt) {
+                redirectTo = '/thank-you';
+            }
         }
 
         // Create response and set cookie
         const response = NextResponse.json({ success: true, redirectTo }, { status: 200 });
-        
+
         response.cookies.set({
             name: "auth_token",
             value: token,
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         return response;
 
     } catch (error) {
-        console.error("Login API Error:", error);
+        console.log("Login API Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
