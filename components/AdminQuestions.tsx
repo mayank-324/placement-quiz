@@ -54,6 +54,21 @@ export default function AdminQuestions() {
     })
     const router = useRouter()
 
+    /** Insert 4 spaces at the cursor position on Tab keypress */
+    const handleTabKey = (e: React.KeyboardEvent<HTMLTextAreaElement>, onChange: (val: string) => void) => {
+        if (e.key !== 'Tab') return
+        e.preventDefault()
+        const ta = e.currentTarget
+        const start = ta.selectionStart
+        const end = ta.selectionEnd
+        const spaces = '    ' // 4 spaces
+        const next = ta.value.substring(0, start) + spaces + ta.value.substring(end)
+        onChange(next)
+        requestAnimationFrame(() => {
+            ta.selectionStart = ta.selectionEnd = start + spaces.length
+        })
+    }
+
     const fetchQuestions = async () => {
         setLoading(true)
 
@@ -222,7 +237,8 @@ export default function AdminQuestions() {
                                 <Plus className="mr-2 h-4 w-4" /> Add Question
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="sm:max-w-[600px] bg-zinc-950 border-zinc-800 text-zinc-100 max-h-[90vh] overflow-y-auto">
+                        <DialogContent className="sm:max-w-[600px] bg-zinc-950 border-zinc-800 text-zinc-100">
+                            <div className="max-h-[85vh] overflow-y-auto pr-1">
                             <DialogHeader>
                                 <DialogTitle className="text-xl">Add New Question</DialogTitle>
                                 <DialogDescription className="text-zinc-400">
@@ -250,12 +266,20 @@ export default function AdminQuestions() {
                                     <Label htmlFor="question">Question Statement</Label>
                                     <Textarea
                                         id="question"
-                                        placeholder="Enter question text or code snippet..."
-                                        rows={4}
+                                        placeholder={`Type your question here.
+
+You can write multiple lines,
+    indent with Tab,
+    and the formatting is preserved exactly as typed.`}
+                                        rows={7}
                                         className="bg-zinc-900 border-zinc-800 font-mono text-sm resize-y"
                                         value={newQuestion.question_text}
                                         onChange={(e) => setNewQuestion({ ...newQuestion, question_text: e.target.value })}
+                                        onKeyDown={(e) => handleTabKey(e, (val) => setNewQuestion({ ...newQuestion, question_text: val }))}
                                     />
+                                    <p className="text-[11px] text-zinc-600">
+                                        Tab inserts 4 spaces · newlines and indentation are preserved exactly as typed
+                                    </p>
                                 </div>
 
                                 {newQuestion.type === 'mcq' && (
@@ -264,20 +288,22 @@ export default function AdminQuestions() {
                                             <Label>Multiple Choice Options</Label>
                                             <div className="space-y-2.5">
                                                 {newQuestion.options.map((option, i) => (
-                                                    <div key={i} className="flex items-center gap-2">
+                                                    <div key={i} className="flex items-start gap-2">
                                                         <div className={cn(
-                                                            "w-8 h-8 rounded-lg flex items-center justify-center border text-xs font-bold shrink-0 transition-colors",
+                                                            "w-8 h-8 rounded-lg flex items-center justify-center border text-xs font-bold shrink-0 mt-1 transition-colors",
                                                             newQuestion.correct_option === i 
                                                                 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 font-bold" 
                                                                 : "border-zinc-800 bg-zinc-900 text-zinc-400"
                                                         )}>
                                                             {String.fromCharCode(65 + i)}
                                                         </div>
-                                                        <Input
+                                                        <Textarea
                                                             value={option}
                                                             onChange={(e) => updateOption(i, e.target.value)}
-                                                            placeholder={`Option ${String.fromCharCode(65 + i)}`}
-                                                            className="bg-zinc-900 border-zinc-800"
+                                                            onKeyDown={(e) => handleTabKey(e, (val) => updateOption(i, val))}
+                                                            placeholder={`Option ${String.fromCharCode(65 + i)} — supports multiple lines and indentation`}
+                                                            rows={2}
+                                                            className="bg-zinc-900 border-zinc-800 font-mono text-sm resize-y focus-visible:ring-0"
                                                         />
                                                     </div>
                                                 ))}
@@ -312,6 +338,7 @@ export default function AdminQuestions() {
                                     Save Question
                                 </Button>
                             </DialogFooter>
+                            </div>
                         </DialogContent>
                     </Dialog>
 
