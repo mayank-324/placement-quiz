@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Loader2, Search, Download, RefreshCw, ChevronDown, ChevronUp, ArrowUpDown, ArrowUp, ArrowDown, LogOut } from "lucide-react"
+import { Loader2, Search, Download, RefreshCw, ChevronDown, ChevronUp, ArrowUpDown, ArrowUp, ArrowDown, LogOut, Calendar, X } from "lucide-react"
 import { Attempt, Question } from "@/lib/types"
 import { MarkdownRenderer } from "./MarkdownRenderer"
 
@@ -20,7 +20,8 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true)
     const [expandedAttemptId, setExpandedAttemptId] = useState<string | null>(null)
     const [searchTerm, setSearchTerm] = useState("")
-    const [sortConfig, setSortConfig] = useState<{ key: 'user_email' | 'score' | null, direction: 'asc' | 'desc' }>({
+    const [selectedDate, setSelectedDate] = useState("")
+    const [sortConfig, setSortConfig] = useState<{ key: 'user_email' | 'score' | 'created_at' | null, direction: 'asc' | 'desc' }>({
         key: null,
         direction: 'desc'
     })
@@ -93,7 +94,7 @@ export default function AdminDashboard() {
         setExpandedAttemptId(expandedAttemptId === id ? null : id)
     }
 
-    const handleSort = (key: 'user_email' | 'score') => {
+    const handleSort = (key: 'user_email' | 'score' | 'created_at') => {
         let direction: 'asc' | 'desc' = 'asc'
         if (sortConfig.key === key && sortConfig.direction === 'asc') {
             direction = 'desc'
@@ -102,27 +103,59 @@ export default function AdminDashboard() {
     }
 
     const filteredAttempts = attempts
-        .filter(attempt =>
-            attempt.user_email?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+        .filter(attempt => {
+            const matchesEmail = (attempt.user_email || '').toLowerCase().includes(searchTerm.toLowerCase())
+            
+            let matchesDate = true
+            if (selectedDate) {
+                const attemptDate = new Date(attempt.created_at)
+                const year = attemptDate.getFullYear()
+                const month = String(attemptDate.getMonth() + 1).padStart(2, '0')
+                const day = String(attemptDate.getDate()).padStart(2, '0')
+                const formattedDate = `${year}-${month}-${day}`
+                matchesDate = formattedDate === selectedDate
+            }
+
+            return matchesEmail && matchesDate
+        })
         .sort((a, b) => {
             if (!sortConfig.key) return 0
 
-            const valA = sortConfig.key === 'user_email' ? (a.user_email || '') : a.score
-            const valB = sortConfig.key === 'user_email' ? (b.user_email || '') : b.score
+            if (sortConfig.key === 'user_email') {
+                const valA = (a.user_email || '').toLowerCase()
+                const valB = (b.user_email || '').toLowerCase()
+                if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1
+                if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1
+                return 0
+            }
 
-            if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1
-            if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1
+            if (sortConfig.key === 'score') {
+                const valA = a.score
+                const valB = b.score
+                if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1
+                if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1
+                return 0
+            }
+
+            if (sortConfig.key === 'created_at') {
+                const valA = new Date(a.created_at).getTime()
+                const valB = new Date(b.created_at).getTime()
+                if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1
+                if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1
+                return 0
+            }
+
             return 0
         })
 
     const handleExportCSV = () => {
-        if (attempts.length === 0) return
+        const listToExport = filteredAttempts.length > 0 ? filteredAttempts : attempts
+        if (listToExport.length === 0) return
 
         const headers = ["Student Email", "Score", "Total Questions", "Percentage", "Date", "Violations"]
         const csvRows = [headers.join(",")]
 
-        attempts.forEach(attempt => {
+        listToExport.forEach(attempt => {
             const percentage = ((attempt.score / questions.length) * 100).toFixed(1) + "%"
             const row = [
                 attempt.user_email || "Unknown",
@@ -140,7 +173,7 @@ export default function AdminDashboard() {
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
-        a.download = `quiz-results-${new Date().toISOString().split('T')[0]}.csv`
+        a.download = `quiz-results-${selectedDate ? selectedDate + '-' : ''}${new Date().toISOString().split('T')[0]}.csv`
         document.body.appendChild(a)
         a.click()
         document.body.removeChild(a)
@@ -195,16 +228,76 @@ export default function AdminDashboard() {
             </div>
 
             <Card className="border-zinc-800 bg-zinc-900/50 backdrop-blur-xl">
-                <CardHeader>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
-                        <Input
-                            placeholder="Search by student email..."
-                            className="pl-9 bg-zinc-950/50 border-zinc-800"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                <CardHeader className="space-y-4">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
+                            <Input
+                                placeholder="Search by student email..."
+                                className="pl-9 pr-9 bg-zinc-950/50 border-zinc-800"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            {searchTerm && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchTerm("")}
+                                    className="absolute right-3 top-3 text-zinc-500 hover:text-zinc-300 transition-colors"
+                                    title="Clear search"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <div className="relative flex items-center flex-1 sm:flex-initial">
+                                <Calendar className="absolute left-3 h-4 w-4 text-zinc-500 pointer-events-none" />
+                                <Input
+                                    type="date"
+                                    value={selectedDate}
+                                    onChange={(e) => setSelectedDate(e.target.value)}
+                                    className="pl-9 pr-3 bg-zinc-950/50 border-zinc-800 text-zinc-200 [color-scheme:dark] w-full sm:w-auto"
+                                    title="Filter by date"
+                                />
+                            </div>
+                            {selectedDate && (
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setSelectedDate("")}
+                                    className="text-zinc-400 hover:text-white px-2.5 h-10 border border-zinc-800 shrink-0"
+                                    title="Clear date filter"
+                                >
+                                    <X className="h-4 w-4 mr-1" /> Clear Date
+                                </Button>
+                            )}
+                        </div>
                     </div>
+
+                    {(searchTerm || selectedDate) && (
+                        <div className="flex items-center justify-between text-xs text-zinc-400 pt-1">
+                            <span>
+                                Showing {filteredAttempts.length} of {attempts.length} attempts
+                                {selectedDate && (
+                                    <span className="ml-1 text-purple-400">
+                                        (filtered for {new Date(selectedDate + 'T00:00:00').toLocaleDateString(undefined, { dateStyle: 'medium' })})
+                                    </span>
+                                )}
+                            </span>
+                            <Button
+                                variant="link"
+                                size="sm"
+                                onClick={() => {
+                                    setSearchTerm("")
+                                    setSelectedDate("")
+                                }}
+                                className="text-xs text-zinc-400 hover:text-zinc-200 p-0 h-auto"
+                            >
+                                Reset all filters
+                            </Button>
+                        </div>
+                    )}
                 </CardHeader>
                 <CardContent>
                     <div className="rounded-md border border-zinc-800 overflow-hidden">
@@ -238,7 +331,19 @@ export default function AdminDashboard() {
                                             )}
                                         </div>
                                     </th>
-                                    <th className="px-6 py-3">Date</th>
+                                    <th
+                                        className="px-6 py-3 cursor-pointer hover:text-white transition-colors"
+                                        onClick={() => handleSort('created_at')}
+                                    >
+                                        <div className="flex items-center gap-1">
+                                            Date
+                                            {sortConfig.key === 'created_at' ? (
+                                                sortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                                            ) : (
+                                                <ArrowUpDown className="h-3 w-3 opacity-30" />
+                                            )}
+                                        </div>
+                                    </th>
                                     <th className="px-6 py-3">Violations</th>
                                     <th className="px-6 py-3 text-right">Actions</th>
                                 </tr>
