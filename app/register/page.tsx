@@ -1,5 +1,6 @@
 import Image from "next/image";
 import RegisterForm from "@/components/RegisterForm";
+import { Link } from "lucide-react";
 
 export default function RegisterPage() {
     return (
@@ -25,7 +26,16 @@ export default function RegisterPage() {
             </div>
 
             {/* Footer */}
-            <footer className="w-full text-center py-6 text-muted-foreground text-sm z-10">
+            <footer className="w-full text-center py-2 text-muted-foreground text-sm z-10">
+                <div className="text-center text-md">
+                    <span className="text-muted-foreground mr-1">Already have an account?</span>
+                    <a
+                        href="/"
+                        className="text-primary hover:underline font-medium"
+                    >
+                        Login
+                    </a>
+                </div>
                 © 2026 Percept Software Systems. All rights reserved.
             </footer>
         </main>
