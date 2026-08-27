@@ -27,6 +27,7 @@ export default function RegisterPage() {
 
             {/* Footer */}
             <footer className="w-full text-center py-2 text-muted-foreground text-sm z-10">
+                © 2026 Percept Software Systems. All rights reserved.
                 <div className="text-center text-md">
                     <span className="text-muted-foreground mr-1">Already have an account?</span>
                     <a
@@ -36,7 +37,6 @@ export default function RegisterPage() {
                         Login
                     </a>
                 </div>
-                © 2026 Percept Software Systems. All rights reserved.
             </footer>
         </main>
     );
