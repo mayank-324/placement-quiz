@@ -12,6 +12,7 @@ import { MarkdownRenderer } from "./MarkdownRenderer"
 
 interface AttemptWithDetails extends Attempt {
     user_email?: string;
+    user_full_name?: string;
 }
 
 export default function AdminDashboard() {
@@ -21,7 +22,7 @@ export default function AdminDashboard() {
     const [expandedAttemptId, setExpandedAttemptId] = useState<string | null>(null)
     const [searchTerm, setSearchTerm] = useState("")
     const [selectedDate, setSelectedDate] = useState("")
-    const [sortConfig, setSortConfig] = useState<{ key: 'user_email' | 'score' | 'created_at' | null, direction: 'asc' | 'desc' }>({
+    const [sortConfig, setSortConfig] = useState<{ key: 'user_full_name' | 'user_email' | 'score' | 'created_at' | null, direction: 'asc' | 'desc' }>({
         key: null,
         direction: 'desc'
     })
@@ -71,10 +72,25 @@ export default function AdminDashboard() {
 
             if (error) throw error
 
+            // Fetch profiles to get full names
+            const { data: profilesData } = await supabase
+                .from('profiles')
+                .select('user_id, full_name')
+
+            const profileMap = new Map<string, string>()
+            if (profilesData) {
+                profilesData.forEach(p => {
+                    if (p.user_id && p.full_name) {
+                        profileMap.set(p.user_id, p.full_name)
+                    }
+                })
+            }
+
             if (attemptsData) {
                 const formattedAttempts = attemptsData.map(a => ({
                     ...a,
-                    user_email: (a.users as { email?: string } | null)?.email
+                    user_email: (a.users as { email?: string } | null)?.email,
+                    user_full_name: profileMap.get(a.user_id) || 'Unknown'
                 }))
                 setAttempts(formattedAttempts)
             }
@@ -94,7 +110,7 @@ export default function AdminDashboard() {
         setExpandedAttemptId(expandedAttemptId === id ? null : id)
     }
 
-    const handleSort = (key: 'user_email' | 'score' | 'created_at') => {
+    const handleSort = (key: 'user_full_name' | 'user_email' | 'score' | 'created_at') => {
         let direction: 'asc' | 'desc' = 'asc'
         if (sortConfig.key === key && sortConfig.direction === 'asc') {
             direction = 'desc'
@@ -105,6 +121,7 @@ export default function AdminDashboard() {
     const filteredAttempts = attempts
         .filter(attempt => {
             const matchesEmail = (attempt.user_email || '').toLowerCase().includes(searchTerm.toLowerCase())
+            const matchesName = (attempt.user_full_name || '').toLowerCase().includes(searchTerm.toLowerCase())
             
             let matchesDate = true
             if (selectedDate) {
@@ -116,10 +133,18 @@ export default function AdminDashboard() {
                 matchesDate = formattedDate === selectedDate
             }
 
-            return matchesEmail && matchesDate
+            return (matchesEmail || matchesName) && matchesDate
         })
         .sort((a, b) => {
             if (!sortConfig.key) return 0
+
+            if (sortConfig.key === 'user_full_name') {
+                const valA = (a.user_full_name || '').toLowerCase()
+                const valB = (b.user_full_name || '').toLowerCase()
+                if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1
+                if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1
+                return 0
+            }
 
             if (sortConfig.key === 'user_email') {
                 const valA = (a.user_email || '').toLowerCase()
@@ -152,12 +177,14 @@ export default function AdminDashboard() {
         const listToExport = filteredAttempts.length > 0 ? filteredAttempts : attempts
         if (listToExport.length === 0) return
 
-        const headers = ["Student Email", "Score", "Total Questions", "Percentage", "Date", "Violations"]
+        const headers = ["Full Name", "Student Email", "Score", "Total Questions", "Percentage", "Date", "Violations"]
         const csvRows = [headers.join(",")]
 
         listToExport.forEach(attempt => {
             const percentage = ((attempt.score / questions.length) * 100).toFixed(1) + "%"
+            const fullNameSafe = `"${(attempt.user_full_name || "Unknown").replace(/"/g, '""')}"`
             const row = [
+                fullNameSafe,
                 attempt.user_email || "Unknown",
                 attempt.score,
                 questions.length,
@@ -233,7 +260,7 @@ export default function AdminDashboard() {
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-3 h-4 w-4 text-zinc-500" />
                             <Input
-                                placeholder="Search by student email..."
+                                placeholder="Search by student name or email..."
                                 className="pl-9 pr-9 bg-zinc-950/50 border-zinc-800"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -306,10 +333,23 @@ export default function AdminDashboard() {
                                 <tr>
                                     <th
                                         className="px-6 py-3 cursor-pointer hover:text-white transition-colors"
+                                        onClick={() => handleSort('user_full_name')}
+                                    >
+                                        <div className="flex items-center gap-1">
+                                            Full Name
+                                            {sortConfig.key === 'user_full_name' ? (
+                                                sortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                                            ) : (
+                                                <ArrowUpDown className="h-3 w-3 opacity-30" />
+                                            )}
+                                        </div>
+                                    </th>
+                                    <th
+                                        className="px-6 py-3 cursor-pointer hover:text-white transition-colors"
                                         onClick={() => handleSort('user_email')}
                                     >
                                         <div className="flex items-center gap-1">
-                                            Student
+                                            Email
                                             {sortConfig.key === 'user_email' ? (
                                                 sortConfig.direction === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
                                             ) : (
@@ -351,7 +391,7 @@ export default function AdminDashboard() {
                             <tbody className="divide-y divide-zinc-800">
                                 {filteredAttempts.length === 0 ? (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-8 text-center text-zinc-500">
+                                        <td colSpan={7} className="px-6 py-8 text-center text-zinc-500">
                                             No attempts found.
                                         </td>
                                     </tr>
@@ -360,6 +400,9 @@ export default function AdminDashboard() {
                                         <Fragment key={attempt.id}>
                                             <tr key={attempt.id} className="bg-zinc-900/30 hover:bg-zinc-800/50 transition-colors">
                                                 <td className="px-6 py-4 font-medium text-white">
+                                                    {attempt.user_full_name || 'Unknown'}
+                                                </td>
+                                                <td className="px-6 py-4 text-zinc-300">
                                                     {attempt.user_email || 'Unknown User'}
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -408,7 +451,7 @@ export default function AdminDashboard() {
                                             </tr>
                                             {expandedAttemptId === attempt.id && (
                                                 <tr className="bg-zinc-950/50">
-                                                    <td colSpan={6} className="px-6 py-4">
+                                                    <td colSpan={7} className="px-6 py-4">
                                                         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                                                             {questions.map((q) => {
                                                                 const userAnswer = attempt.answers[q.id];
